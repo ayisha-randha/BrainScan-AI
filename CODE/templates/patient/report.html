@@ -1,0 +1,162 @@
+{% extends "base.html" %}
+{% block title %}Scan Report #{{ scan.id }}{% endblock %}
+{% block page_title %}Scan Report{% endblock %}
+{% block content %}
+
+<!-- Report Header Banner -->
+<div class="report-header mb-4">
+  <div class="row align-items-center">
+    <div class="col-md-8">
+      <div style="font-size:0.75rem;color:rgba(241,245,249,0.6);margin-bottom:6px;text-transform:uppercase;letter-spacing:1px;">
+        <i class="fa-solid fa-brain me-1"></i>BrainScan AI — Medical Report
+      </div>
+      <h3 style="font-family:'Sora',sans-serif;font-weight:800;color:#f1f5f9;letter-spacing:-0.5px;margin-bottom:6px;">
+        {{ scan.prediction }}
+        <span style="font-weight:400;font-size:1.2rem;opacity:0.75;">— {{ "%.1f"|format(scan.confidence) }}% Confidence</span>
+      </h3>
+      <div style="font-size:0.82rem;color:rgba(241,245,249,0.6);">{{ scan.created_at.strftime('%d %B %Y, %I:%M %p') }}</div>
+    </div>
+    <div class="col-md-4 text-md-end mt-3 mt-md-0">
+      <div style="font-size:0.78rem;color:rgba(241,245,249,0.55);line-height:1.8;">
+        Report #{{ scan.id }}<br>
+        Patient: {{ patient.name }}<br>
+        Doctor: Dr. {{ doctor.name }}
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Status Timeline -->
+<div class="card mb-4 p-4">
+  <div class="fw-600 mb-3" style="font-size:0.88rem;">
+    <i class="fa-solid fa-timeline me-2" style="color:#2563eb;"></i>Case Progress
+  </div>
+  {% set status_order = ['pending','confirmed','scanned','reviewed','complete'] %}
+  {% set current_idx = status_order.index(scan.status if scan.status in status_order else 'pending') %}
+  {% set steps = [
+    ('Booked',    'fa-calendar-plus'),
+    ('Confirmed', 'fa-calendar-check'),
+    ('Scanned',   'fa-microscope'),
+    ('Reviewed',  'fa-stethoscope'),
+    ('Complete',  'fa-circle-check')
+  ] %}
+  <div class="timeline">
+    {% for label, icon in steps %}
+    {% set step_idx = loop.index0 %}
+    <div class="timeline-step {% if step_idx < current_idx %}done{% elif step_idx == current_idx %}active{% endif %}">
+      <div class="timeline-dot"><i class="fa-solid {{ icon }}"></i></div>
+      <div class="timeline-label">{{ label }}</div>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="row g-4">
+
+  <!-- Left Column -->
+  <div class="col-lg-4">
+    <!-- Patient Details -->
+    <div class="card mb-3">
+      <div class="card-header-custom"><i class="fa-solid fa-user" style="color:#2563eb;"></i> Patient Details</div>
+      <div class="p-4">
+        {% set fields = [
+          ('Name',        patient.name),
+          ('Phone',       patient.phone or '—'),
+          ('Doctor',      'Dr. ' + doctor.name),
+          ('Date',        scan.appointment.appt_date),
+          ('Time',        scan.appointment.time_slot)
+        ] %}
+        {% for label, val in fields %}
+        <div class="{% if not loop.last %}mb-3{% endif %}">
+          <div style="font-size:0.72rem;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;margin-bottom:3px;">{{ label }}</div>
+          <div class="fw-600" style="font-size:0.88rem;">{{ val }}</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+    <!-- Diagnosis -->
+    <div class="card mb-3">
+      <div class="card-header-custom"><i class="fa-solid fa-stethoscope" style="color:#22c55e;"></i> Diagnosis</div>
+      <div class="p-4">
+        <div class="mb-3">
+          <div style="font-size:0.72rem;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;margin-bottom:6px;">AI Prediction</div>
+          <div class="fw-700" style="font-size:1.1rem;color:{% if scan.prediction=='No Tumor' %}#15803d{% else %}#dc2626{% endif %};">
+            {{ scan.prediction }}
+          </div>
+        </div>
+        <div class="mb-3">
+          <div style="font-size:0.72rem;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;margin-bottom:8px;">Confidence</div>
+          <div class="confidence-bar-bg mb-2"><div class="confidence-bar" style="width:{{ scan.confidence }}%;"></div></div>
+          <div class="fw-700" style="color:#0f172a;">{{ "%.1f"|format(scan.confidence) }}%</div>
+        </div>
+        {% if scan.confirmed_diagnosis %}
+        <div class="mb-3">
+          <div style="font-size:0.72rem;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;margin-bottom:4px;">Doctor Confirmed</div>
+          <div class="fw-700" style="color:#1d4ed8;">{{ scan.confirmed_diagnosis }}</div>
+        </div>
+        {% endif %}
+        <div>
+          <div style="font-size:0.72rem;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;margin-bottom:6px;">Status</div>
+          <span class="status-badge status-{{ scan.status }}">{{ scan.status.replace('_',' ')|title }}</span>
+        </div>
+      </div>
+    </div>
+
+    {% if scan.doctor_notes %}
+    <div class="card">
+      <div class="card-header-custom"><i class="fa-solid fa-notes-medical" style="color:#6366f1;"></i> Doctor's Notes</div>
+      <div class="p-4" style="font-style:italic;font-size:0.875rem;color:#374151;line-height:1.7;">{{ scan.doctor_notes }}</div>
+    </div>
+    {% endif %}
+  </div>
+
+  <!-- Right Column -->
+  <div class="col-lg-8">
+    <!-- Scan Images -->
+    <div class="card mb-4">
+      <div class="card-header-custom"><i class="fa-solid fa-image" style="color:var(--accent);"></i> Scan Images</div>
+      <div class="p-4">
+        <div class="row g-4">
+          <div class="col-md-6 text-center">
+            <div style="font-size:0.8rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Original MRI</div>
+            <img src="/static/uploads/{{ scan.image_path }}" class="scan-image" alt="MRI Scan"
+                 style="width:100%;border-radius:12px;border:1.5px solid #e8eef6;">
+          </div>
+          <div class="col-md-6 text-center">
+            <div style="font-size:0.8rem;font-weight:600;color:#64748b;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:10px;">Grad-CAM Heatmap</div>
+            <img src="/static/uploads/{{ scan.cam_path }}" class="scan-image" alt="Grad-CAM"
+                 style="width:100%;border-radius:12px;border:1.5px solid #e8eef6;">
+            <div style="font-size:0.76rem;color:#94a3b8;margin-top:8px;">
+              <i class="fa-solid fa-circle-info me-1"></i>Highlighted regions show AI attention areas
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    {% if scan.prediction != 'No Tumor' %}
+    <div class="tip-box warning mb-4">
+      <i class="fa-solid fa-triangle-exclamation fa-lg"></i>
+      <div>
+        <strong>Important Notice</strong><br>
+        This AI prediction is for informational purposes only. Please consult your doctor for a definitive diagnosis and treatment plan.
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- Actions -->
+    <div class="d-flex gap-3 flex-wrap">
+      <a href="/patient/appointments" class="btn btn-outline-secondary">
+        <i class="fa-solid fa-arrow-left"></i> Back
+      </a>
+      <a href="/patient/report/{{ scan.id }}/pdf" class="btn btn-primary">
+        <i class="fa-solid fa-file-pdf"></i> Download PDF
+      </a>
+      <button onclick="window.print()" class="btn btn-outline-secondary">
+        <i class="fa-solid fa-print"></i> Print
+      </button>
+    </div>
+  </div>
+</div>
+{% endblock %}

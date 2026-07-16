@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+{% block title %}Doctor Dashboard{% endblock %}
+{% block page_title %}Doctor Dashboard{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}
+{% block content %}
+
+<!-- Welcome -->
+<div class="mb-4 p-4 rounded-3 animate-in" style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1px solid #bfdbfe;position:relative;overflow:hidden;">
+  <div style="position:absolute;top:-30px;right:-30px;width:150px;height:150px;border-radius:50%;background:radial-gradient(circle,rgba(56,189,248,0.1),transparent 70%);"></div>
+  <div class="d-flex align-items-center gap-3">
+    <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--primary),var(--accent));display:flex;align-items:center;justify-content:center;font-size:1.4rem;color:#fff;box-shadow:0 6px 20px var(--primary-glow);">
+      <i class="fa-solid fa-user-doctor"></i>
+    </div>
+    <div class="flex-grow-1">
+      <h5 class="mb-0" style="color:#0f172a;font-family:'Sora',sans-serif;font-weight:700;">Dr. {{ session.name }}</h5>
+      <p class="mb-0" style="color:#475569;font-size:0.85rem;">{{ today_appts|length }} appointments today · {{ pending_reviews }} scans awaiting review</p>
+    </div>
+    {% if avg_rating %}
+    <div style="text-align:right;">
+      <div style="color:#f59e0b;font-size:1rem;">{% for i in range(1,6) %}{% if i <= avg_rating %}<i class="fa-solid fa-star"></i>{% else %}<i class="fa-regular fa-star"></i>{% endif %}{% endfor %}</div>
+      <div style="color:#64748b;font-size:0.78rem;">{{ avg_rating }}/5 ({{ rating_count }} reviews)</div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Stats Row -->
+<div class="row g-3 mb-4">
+  <div class="col-md-3 animate-in-1">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(37,99,235,0.1);"><i class="fa-solid fa-calendar-day" style="color:var(--accent);"></i></div>
+      <div class="stat-info">
+        <div class="stat-value">{{ today_appts|length }}</div>
+        <div class="stat-label">Today's Appointments</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 animate-in-2">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(245,158,11,0.1);"><i class="fa-solid fa-hourglass-half" style="color:#f59e0b;"></i></div>
+      <div class="stat-info">
+        <div class="stat-value">{{ pending_reviews }}</div>
+        <div class="stat-label">Scans to Review</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 animate-in-3">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(244,63,94,0.1);"><i class="fa-solid fa-triangle-exclamation" style="color:#f43f5e;"></i></div>
+      <div class="stat-info">
+        <div class="stat-value">{{ flagged|length }}</div>
+        <div class="stat-label">Low Confidence Flags</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-3 animate-in-4">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(34,197,94,0.1);"><i class="fa-solid fa-microscope" style="color:#22c55e;"></i></div>
+      <div class="stat-info">
+        <div class="stat-value">{{ scans|length }}</div>
+        <div class="stat-label">Recent Scans</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Today's Appointments -->
+  <div class="col-lg-6 animate-in-2">
+    <div class="card">
+      <div class="card-header-custom justify-content-between">
+        <span><i class="fa-solid fa-calendar-day" style="color:var(--accent);"></i> Today's Schedule</span>
+        <a href="/doctor/appointments" class="btn btn-sm btn-outline-secondary" style="font-size:0.75rem;">All</a>
+      </div>
+      <div>
+        {% if today_appts %}
+          {% for appt in today_appts %}
+          <div class="d-flex align-items-center gap-3 p-3" style="border-bottom:1px solid #f1f5f9;">
+            <div style="width:42px;height:42px;border-radius:10px;background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Sora',sans-serif;font-weight:700;flex-shrink:0;">{{ appt.patient.name[0] }}</div>
+            <div class="flex-grow-1">
+              <div class="fw-600" style="font-size:0.88rem;">{{ appt.patient.name }}</div>
+              <div style="color:#64748b;font-size:0.78rem;">{{ appt.time_slot }}</div>
+            </div>
+            <span class="status-badge status-{{ appt.status }}">{{ appt.status|capitalize }}</span>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="p-5 text-center" style="color:#94a3b8;">
+            <i class="fa-regular fa-calendar fa-2x mb-2 d-block" style="opacity:0.3;"></i>
+            No appointments today
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Weekly Chart -->
+  <div class="col-lg-6 animate-in-3">
+    <div class="card">
+      <div class="card-header-custom">
+        <i class="fa-solid fa-chart-bar" style="color:#2563eb;"></i> Weekly Appointments
+      </div>
+      <div class="p-4">
+        <div class="chart-container"><canvas id="weeklyChart"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Scans -->
+  <div class="col-lg-7 animate-in-3">
+    <div class="card">
+      <div class="card-header-custom justify-content-between">
+        <span><i class="fa-solid fa-microscope" style="color:#22c55e;"></i> Recent Scans</span>
+        <a href="/doctor/scans" class="btn btn-sm btn-outline-secondary" style="font-size:0.75rem;">View All</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table mb-0">
+          <thead><tr><th>Patient</th><th>Prediction</th><th>Confidence</th><th>Status</th><th></th></tr></thead>
+          <tbody>
+            {% for scan in scans %}
+            <tr>
+              <td class="fw-600">{{ scan.patient.name }}</td>
+              <td>
+                <span style="color:{% if scan.prediction=='No Tumor' %}#15803d{% else %}#dc2626{% endif %};font-weight:600;font-size:0.82rem;">
+                  {{ scan.prediction }}
+                </span>
+              </td>
+              <td>
+                <div class="d-flex align-items-center gap-2">
+                  <div class="confidence-bar-bg" style="width:60px;"><div class="confidence-bar" style="width:{{ scan.confidence }}%;"></div></div>
+                  <span style="font-size:0.78rem;color:#64748b;">{{ "%.0f"|format(scan.confidence) }}%</span>
+                </div>
+              </td>
+              <td><span class="status-badge status-{{ scan.status }}">{{ scan.status|replace('_',' ')|capitalize }}</span></td>
+              <td><a href="/doctor/review/{{ scan.id }}" class="btn btn-sm btn-outline-primary">Review</a></td>
+            </tr>
+            {% else %}
+            <tr><td colspan="5" class="text-center py-4" style="color:#94a3b8;">No scans yet</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Low Confidence Alerts -->
+  <div class="col-lg-5 animate-in-4">
+    <div class="card" style="border-left:3px solid #f43f5e;">
+      <div class="card-header-custom">
+        <i class="fa-solid fa-triangle-exclamation" style="color:#f43f5e;"></i> Low Confidence Alerts
+      </div>
+      <div>
+        {% if flagged %}
+          {% for scan in flagged %}
+          <div class="d-flex align-items-center gap-3 p-3" style="border-bottom:1px solid #f1f5f9;">
+            <div style="width:38px;height:38px;border-radius:9px;background:rgba(244,63,94,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <i class="fa-solid fa-exclamation" style="color:#f43f5e;font-size:0.85rem;"></i>
+            </div>
+            <div class="flex-grow-1">
+              <div class="fw-600" style="font-size:0.85rem;">{{ scan.patient.name }}</div>
+              <div style="color:#f59e0b;font-size:0.78rem;font-weight:600;">{{ "%.1f"|format(scan.confidence) }}% confidence — {{ scan.prediction }}</div>
+            </div>
+            <a href="/doctor/review/{{ scan.id }}" class="btn btn-sm btn-danger" style="font-size:0.75rem;">Review</a>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="p-4 text-center" style="color:#94a3b8;">
+            <i class="fa-solid fa-circle-check fa-2x mb-2 d-block" style="color:#22c55e;opacity:0.5;"></i>
+            All scans above threshold
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const weekly = {{ weekly|safe }};
+new Chart(document.getElementById('weeklyChart'), {
+  type: 'bar',
+  data: {
+    labels: weekly.map(d => d.day),
+    datasets: [{
+      label: 'Appointments',
+      data: weekly.map(d => d.count),
+      backgroundColor: 'rgba(37,99,235,0.12)',
+      borderColor: '#2563eb',
+      borderWidth: 2,
+      borderRadius: 8,
+      borderSkipped: false,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { beginAtZero: true, ticks: { stepSize: 1, color: '#94a3b8', font: { size: 11 } }, grid: { color: '#f1f5f9' } },
+      x: { ticks: { color: '#94a3b8', font: { size: 11 } }, grid: { display: false } }
+    }
+  }
+});
+</script>
+{% endblock %}

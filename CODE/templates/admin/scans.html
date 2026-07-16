@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}All Scans{% endblock %}
+{% block page_title %}All Scan Results{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <div class="page-header-title">Scan Results</div>
+    <div class="page-header-sub">AI predictions and doctor review status across all patients</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table mb-0">
+      <thead>
+        <tr><th>#</th><th>Patient</th><th>Doctor</th><th>Prediction</th><th>Confidence</th><th>Confirmed</th><th>Status</th><th>Date</th></tr>
+      </thead>
+      <tbody>
+        {% for scan in scans.items %}
+        <tr>
+          <td style="color:#94a3b8;font-size:0.8rem;">#{{ scan.id }}</td>
+          <td class="fw-600">{{ scan.patient.name }}</td>
+          <td style="color:#64748b;">Dr. {{ scan.doctor.name }}</td>
+          <td>
+            <span class="fw-700" style="color:{% if scan.prediction=='No Tumor' %}#15803d{% else %}#dc2626{% endif %};">
+              {{ scan.prediction }}
+            </span>
+          </td>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <div class="confidence-bar-bg" style="width:65px;">
+                <div class="confidence-bar" style="width:{{ scan.confidence }}%;{% if scan.confidence < 70 %}background:linear-gradient(90deg,#f59e0b,#ef4444);{% endif %}"></div>
+              </div>
+              <span style="font-size:0.8rem;font-weight:600;color:{% if scan.confidence < 70 %}#b45309{% else %}#64748b{% endif %};">
+                {{ "%.1f"|format(scan.confidence) }}%
+                {% if scan.confidence < 70 %}<i class="fa-solid fa-triangle-exclamation ms-1"></i>{% endif %}
+              </span>
+            </div>
+          </td>
+          <td style="color:#64748b;font-size:0.85rem;">{{ scan.confirmed_diagnosis or '—' }}</td>
+          <td><span class="status-badge status-{{ scan.status }}">{{ scan.status.replace('_',' ')|title }}</span></td>
+          <td style="color:#94a3b8;font-size:0.82rem;">{{ scan.created_at.strftime('%d %b %Y') }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8">
+          <div class="empty-state">
+            <i class="fa-solid fa-microscope"></i>
+            <h6>No Scans Yet</h6>
+            <p>Scan results will appear here once MRI images are processed.</p>
+          </div>
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% if scans.pages > 1 %}
+<div class="pagination-wrapper">
+  <nav><ul class="pagination">
+    <li class="page-item {% if not scans.has_prev %}disabled{% endif %}"><a class="page-link" href="?page={{ scans.prev_num }}"><i class="fa-solid fa-chevron-left"></i></a></li>
+    {% for p in scans.iter_pages() %}
+      {% if p %}<li class="page-item {% if p==scans.page %}active{% endif %}"><a class="page-link" href="?page={{ p }}">{{ p }}</a></li>
+      {% else %}<li class="page-item disabled"><span class="page-link">…</span></li>{% endif %}
+    {% endfor %}
+    <li class="page-item {% if not scans.has_next %}disabled{% endif %}"><a class="page-link" href="?page={{ scans.next_num }}"><i class="fa-solid fa-chevron-right"></i></a></li>
+  </ul></nav>
+</div>
+{% endif %}
+{% endblock %}

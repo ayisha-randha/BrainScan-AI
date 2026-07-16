@@ -1,0 +1,78 @@
+{% extends "base.html" %}
+{% block title %}Prescribe — {{ patient.name }}{% endblock %}
+{% block page_title %}Write Prescription{% endblock %}
+{% block content %}
+
+<div class="row g-4">
+
+  <!-- Patient Sidebar -->
+  <div class="col-lg-4">
+    <div class="card">
+      <div class="card-header-custom"><i class="fa-solid fa-user" style="color:#2563eb;"></i> Patient</div>
+      <div class="p-4">
+        <div class="d-flex align-items-center gap-3 mb-4">
+          <div style="width:46px;height:46px;border-radius:13px;background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Sora',sans-serif;font-weight:700;font-size:1.2rem;flex-shrink:0;">{{ patient.name[0] }}</div>
+          <div>
+            <div class="fw-700" style="font-size:0.95rem;">{{ patient.name }}</div>
+            <div style="color:#64748b;font-size:0.8rem;">{{ patient.phone or '—' }}</div>
+          </div>
+        </div>
+        <div class="mb-3">
+          <div style="font-size:0.72rem;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;margin-bottom:4px;">Appointment</div>
+          <div class="fw-600">{{ appt.appt_date }}</div>
+          <div style="color:#64748b;font-size:0.82rem;">{{ appt.time_slot }}</div>
+        </div>
+        <div>
+          <div style="font-size:0.72rem;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;margin-bottom:6px;">Reported Symptoms</div>
+          <div class="p-3 rounded-3" style="background:#f8fafc;border:1px solid #f1f5f9;font-style:italic;font-size:0.85rem;color:#374151;line-height:1.6;">
+            {{ appt.reason or 'No symptoms described.' }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Prescription Form -->
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-header-custom">
+        <i class="fa-solid fa-prescription" style="color:#22c55e;"></i> Prescription Form
+      </div>
+      <div class="p-4">
+        <form method="POST">
+          <div class="mb-4">
+            <label class="form-label">Diagnosis <span style="color:#f43f5e;">*</span></label>
+            <input type="text" name="diagnosis" class="form-control form-control-lg"
+                   placeholder="e.g. Tension headache, Migraine, Sinusitis..." required>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label">Prescribed Medicines <span style="color:#f43f5e;">*</span></label>
+            <textarea name="medicines" class="form-control" rows="6" required
+              placeholder="List each medicine on a new line:&#10;Paracetamol 500mg — 1 tablet twice daily for 5 days&#10;Ibuprofen 400mg — 1 tablet after meals for 3 days&#10;Vitamin B Complex — 1 tablet daily"></textarea>
+            <div style="font-size:0.78rem;color:#94a3b8;margin-top:5px;">Enter one medicine per line with dosage instructions.</div>
+          </div>
+
+          <div class="mb-4">
+            <label class="form-label">Instructions &amp; Advice</label>
+            <textarea name="instructions" class="form-control" rows="3"
+              placeholder="e.g. Rest for 2 days, avoid screen time, drink plenty of fluids..."></textarea>
+          </div>
+
+          <div class="mb-5">
+            <label class="form-label">Follow-up Date <span style="color:#94a3b8;font-weight:400;">(optional)</span></label>
+            <input type="date" name="follow_up_date" class="form-control" min="{{ appt.appt_date }}">
+          </div>
+
+          <div class="d-flex gap-3">
+            <button type="submit" class="btn btn-success btn-lg">
+              <i class="fa-solid fa-paper-plane"></i> Save &amp; Notify Patient
+            </button>
+            <a href="/doctor/appointments" class="btn btn-outline-secondary btn-lg">Cancel</a>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

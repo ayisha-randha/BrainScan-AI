@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}My Prescriptions{% endblock %}
+{% block page_title %}My Prescriptions{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <div class="page-header-title">My Prescriptions</div>
+    <div class="page-header-sub">Treatment plans issued by your doctor</div>
+  </div>
+</div>
+
+{% if prescriptions %}
+  {% for pres in prescriptions %}
+  <div class="card mb-4 animate-in" style="border-left:3px solid #22c55e;">
+    <!-- Prescription Header -->
+    <div class="card-header-custom justify-content-between">
+      <div class="d-flex align-items-center gap-2">
+        <i class="fa-solid fa-prescription" style="color:#22c55e;"></i>
+        <span class="fw-700" style="font-family:'Sora',sans-serif;">Prescription #{{ pres.id }}</span>
+        <span style="color:#94a3b8;font-weight:400;">— {{ pres.created_at.strftime('%d %B %Y') }}</span>
+      </div>
+      <span class="status-badge status-confirmed">{{ pres.appointment.appt_date }}</span>
+    </div>
+
+    <div class="p-4">
+      <div class="row g-4">
+
+        <!-- Left: Doctor & Diagnosis -->
+        <div class="col-md-5">
+          <div class="d-flex align-items-center gap-3 mb-4">
+            <div style="width:42px;height:42px;border-radius:11px;background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Sora',sans-serif;font-weight:700;flex-shrink:0;">D</div>
+            <div>
+              <div style="font-size:0.72rem;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;">Prescribed by</div>
+              <div class="fw-700">Dr. {{ pres.doctor.name }}</div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <div style="font-size:0.72rem;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;margin-bottom:6px;">Diagnosis</div>
+            <div class="fw-700" style="font-size:1.05rem;color:#0f172a;">{{ pres.diagnosis or '—' }}</div>
+          </div>
+
+          {% if pres.follow_up_date %}
+          <div class="p-3 rounded-3" style="background:#fffbeb;border:1px solid #fde68a;">
+            <div style="font-size:0.72rem;color:#92400e;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:4px;"><i class="fa-solid fa-calendar me-1"></i>Follow-up</div>
+            <div class="fw-700" style="color:#b45309;">{{ pres.follow_up_date }}</div>
+          </div>
+          {% endif %}
+        </div>
+
+        <!-- Right: Medicines & Instructions -->
+        <div class="col-md-7">
+          {% if pres.medicines %}
+          <div class="mb-4">
+            <div style="font-size:0.72rem;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;margin-bottom:10px;">
+              <i class="fa-solid fa-capsules me-1" style="color:#22c55e;"></i> Prescribed Medicines
+            </div>
+            <div class="p-3 rounded-3" style="background:#f8fafc;border:1px solid #f1f5f9;">
+              {% for line in pres.medicines.split('\n') %}
+                {% if line.strip() %}
+                <div class="d-flex align-items-start gap-2 mb-2" style="{% if not loop.last %}padding-bottom:8px;border-bottom:1px solid #f1f5f9;{% endif %}">
+                  <div style="width:6px;height:6px;border-radius:50%;background:#2563eb;flex-shrink:0;margin-top:6px;"></div>
+                  <span style="font-size:0.875rem;color:#374151;">{{ line.strip() }}</span>
+                </div>
+                {% endif %}
+              {% endfor %}
+            </div>
+          </div>
+          {% endif %}
+
+          {% if pres.instructions %}
+          <div>
+            <div style="font-size:0.72rem;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;margin-bottom:8px;">
+              <i class="fa-solid fa-circle-info me-1" style="color:var(--accent);"></i> Instructions
+            </div>
+            <div class="p-3 rounded-3" style="background:#eff6ff;border:1px solid #bfdbfe;font-style:italic;font-size:0.875rem;color:#1d4ed8;line-height:1.6;">
+              {{ pres.instructions }}
+            </div>
+          </div>
+          {% endif %}
+        </div>
+
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+
+{% else %}
+<div class="card">
+  <div class="empty-state">
+    <i class="fa-solid fa-prescription-bottle-medical"></i>
+    <h6>No Prescriptions Yet</h6>
+    <p>Prescriptions appear here when your doctor issues one directly without requiring an MRI scan.</p>
+    <a href="/patient/book" class="btn btn-primary">Book Appointment</a>
+  </div>
+</div>
+{% endif %}
+{% endblock %}

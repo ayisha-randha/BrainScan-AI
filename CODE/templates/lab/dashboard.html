@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}Lab Dashboard{% endblock %}
+{% block page_title %}Lab Dashboard{% endblock %}
+{% block content %}
+
+<!-- Welcome Banner -->
+<div class="mb-4 p-4 rounded-3 animate-in" style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1px solid #bfdbfe;position:relative;overflow:hidden;">
+  <div style="position:absolute;top:-30px;right:-30px;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,rgba(99,102,241,0.1),transparent 70%);"></div>
+  <div class="d-flex align-items-center gap-3">
+    <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,#6366f1,#8b5cf6);display:flex;align-items:center;justify-content:center;font-size:1.4rem;color:#fff;flex-shrink:0;box-shadow:0 6px 20px rgba(99,102,241,0.3);">
+      <i class="fa-solid fa-flask"></i>
+    </div>
+    <div>
+      <h5 class="mb-0" style="color:#0f172a;font-family:'Sora',sans-serif;font-weight:700;">Lab Portal</h5>
+      <p class="mb-0" style="color:#475569;font-size:0.85rem;">{{ pending }} pending request{{ 's' if pending != 1 else '' }} — {{ scheduled }} scan{{ 's' if scheduled != 1 else '' }} scheduled today</p>
+    </div>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="row g-3 mb-4">
+  <div class="col-md-4 animate-in-1">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(245,158,11,0.1);"><i class="fa-solid fa-hourglass-half" style="color:#f59e0b;"></i></div>
+      <div class="stat-info">
+        <div class="stat-value">{{ pending }}</div>
+        <div class="stat-label">Pending Requests</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4 animate-in-2">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(37,99,235,0.1);"><i class="fa-solid fa-calendar-check" style="color:var(--accent);"></i></div>
+      <div class="stat-info">
+        <div class="stat-value">{{ scheduled }}</div>
+        <div class="stat-label">Scans Scheduled</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4 animate-in-3">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(34,197,94,0.1);"><i class="fa-solid fa-circle-check" style="color:#22c55e;"></i></div>
+      <div class="stat-info">
+        <div class="stat-value">{{ uploaded }}</div>
+        <div class="stat-label">Scans Uploaded</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Recent MRI Requests -->
+<div class="card animate-in-2">
+  <div class="card-header-custom justify-content-between">
+    <span><i class="fa-solid fa-x-ray" style="color:#6366f1;"></i> Recent MRI Requests</span>
+    <a href="/lab/requests" class="btn btn-sm btn-outline-secondary" style="font-size:0.75rem;">View All</a>
+  </div>
+  <div class="table-responsive">
+    <table class="table mb-0">
+      <thead>
+        <tr><th>#</th><th>Patient</th><th>Doctor</th><th>Requested</th><th>Status</th><th></th></tr>
+      </thead>
+      <tbody>
+        {% for req in recent %}
+        <tr>
+          <td style="color:#94a3b8;font-size:0.8rem;">#{{ req.id }}</td>
+          <td class="fw-600">{{ req.patient.name }}</td>
+          <td style="color:#64748b;">Dr. {{ req.doctor.name }}</td>
+          <td style="color:#94a3b8;font-size:0.82rem;">{{ req.created_at.strftime('%d %b %Y') }}</td>
+          <td><span class="status-badge status-{{ req.status }}">{{ req.status|replace('_',' ')|title }}</span></td>
+          <td>
+            {% if req.status == 'pending' %}
+              <a href="/lab/requests?status=pending" class="btn btn-sm btn-warning">
+                <i class="fa-solid fa-calendar-plus"></i> Schedule
+              </a>
+            {% elif req.status == 'scheduled' %}
+              <a href="/lab/request/{{ req.id }}/upload" class="btn btn-sm btn-primary">
+                <i class="fa-solid fa-upload"></i> Upload
+              </a>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="6">
+          <div class="empty-state">
+            <i class="fa-solid fa-x-ray"></i>
+            <h6>No MRI Requests Yet</h6>
+            <p>Requests from doctors will appear here.</p>
+          </div>
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}

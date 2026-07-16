@@ -1,0 +1,539 @@
+{% extends "base.html" %}
+{% block title %}BrainScan AI — AI-Powered Brain Tumor Detection System{% endblock %}
+{% block content %}
+<div style="background:#fff;overflow-x:hidden;">
+
+  <!-- NAVBAR -->
+  <nav class="landing-nav" id="mainNav">
+    <div class="container">
+      <div class="d-flex align-items-center justify-content-between">
+        <a href="/" class="nav-brand">
+          <div class="nav-brand-icon"><i class="fa-solid fa-brain"></i></div>
+          <span>BrainScan <span style="color:var(--primary);">AI</span></span>
+        </a>
+        <div class="d-flex align-items-center gap-3">
+          <div class="live-pill d-none d-md-flex"><span class="live-dot"></span>System Active</div>
+          <a href="/login"    class="btn-nav-login">Sign In</a>
+          <a href="/register" class="btn-nav-cta"><i class="fa-solid fa-user-plus me-1"></i>Get Started</a>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- HERO -->
+  <section class="lp-hero" id="heroSection">
+    <!-- Animated canvas neural network -->
+    <canvas id="heroCanvas" style="position:absolute;inset:0;width:100%;height:100%;z-index:0;opacity:.35;pointer-events:none;"></canvas>
+
+    <!-- Dot grid overlay -->
+    <div class="hero-dot-grid"></div>
+
+    <!-- Gradient blobs -->
+    <div class="hero-blob hero-blob-1"></div>
+    <div class="hero-blob hero-blob-2"></div>
+    <div class="hero-blob hero-blob-3"></div>
+
+    <!-- Floating ring decorations -->
+    <div style="position:absolute;top:15%;left:4%;width:120px;height:120px;border-radius:50%;border:1.5px solid rgba(37,99,235,0.09);animation:ringPulse 5s ease-in-out infinite;pointer-events:none;"></div>
+    <div style="position:absolute;bottom:20%;right:6%;width:80px;height:80px;border-radius:50%;border:1px solid rgba(14,165,233,0.12);animation:ringPulse 7s 1s ease-in-out infinite;pointer-events:none;"></div>
+    <div style="position:absolute;top:55%;left:2%;width:48px;height:48px;border-radius:50%;background:rgba(37,99,235,0.05);animation:blobFloat 8s ease-in-out infinite;pointer-events:none;"></div>
+
+    <div class="container lp-hero-inner" style="padding-top:68px;padding-bottom:88px;position:relative;z-index:2;">
+      <div class="row align-items-center g-5">
+
+        <!-- COPY -->
+        <div class="col-lg-6">
+          <div class="lp-eyebrow" style="animation:fadeInUp .5s ease both;">
+            <span class="pulse-dot"></span> Deep Learning · Clinical AI · Hospital Platform
+          </div>
+
+          <h1 style="animation:fadeInUp .6s .08s ease both;">
+            Smarter Brain<br>Tumor Detection<br>
+            <span class="grad-text">Powered by AI</span>
+          </h1>
+
+          <p style="animation:fadeInUp .6s .16s ease both;">
+            An integrated hospital management system with CNN &amp; EfficientNet-B0 deep learning — 
+            classifying MRI scans into 4 tumor types with real-time Grad-CAM explainability 
+            and a full end-to-end clinical workflow.
+          </p>
+
+          <div class="lp-hero-actions" style="animation:fadeInUp .6s .24s ease both;">
+            <a href="/register" class="btn-hero-primary">
+              <i class="fa-solid fa-user-plus"></i> Create Free Account
+            </a>
+            <a href="/login" class="btn-hero-ghost">
+              <i class="fa-solid fa-right-to-bracket"></i> Sign In
+            </a>
+          </div>
+
+          <div class="hero-trust" style="animation:fadeInUp .6s .32s ease both;">
+            <div class="hero-trust-item"><i class="fa-solid fa-circle-check"></i>Glioma · Meningioma · Pituitary · No Tumor</div>
+            <div class="hero-trust-item"><i class="fa-solid fa-circle-check"></i>Grad-CAM Explainability</div>
+            <div class="hero-trust-item"><i class="fa-solid fa-circle-check"></i>PDF Report Generation</div>
+          </div>
+        </div>
+
+        <!-- MRI CARD VISUAL -->
+        <div class="col-lg-6 d-none d-lg-flex justify-content-center" style="position:relative;">
+          <div style="position:relative;padding:30px 64px 30px 20px;">
+            <div class="hero-visual-wrap">
+              <div class="brain-card">
+                <div style="position:absolute;inset:-20px;border-radius:32px;border:1.5px solid rgba(37,99,235,0.08);animation:ringPulse 4s ease-in-out infinite;pointer-events:none;"></div>
+                <div style="position:absolute;inset:-38px;border-radius:42px;border:1px solid rgba(37,99,235,0.04);animation:ringPulse 4s .8s ease-in-out infinite;pointer-events:none;"></div>
+
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                  <div>
+                    <div class="brain-card-title">MRI Analysis Report</div>
+                    <div style="font-size:.69rem;color:var(--text-4);margin-top:1px;">Patient ID #1042 · Scan #337</div>
+                  </div>
+                  <span style="background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;font-size:.6rem;font-weight:700;padding:4px 10px;border-radius:20px;letter-spacing:.5px;text-transform:uppercase;">Live AI</span>
+                </div>
+
+                <div class="scan-mri-frame">
+                  <div class="scan-mri-overlay"></div>
+                  <i class="fa-solid fa-brain scan-brain-icon"></i>
+                  <div class="scan-heatmap"></div>
+                  <div class="scan-line"></div>
+                </div>
+
+                <!-- Model labels -->
+                <div style="display:flex;gap:6px;margin-bottom:10px;flex-wrap:wrap;">
+                  <span style="background:#eff6ff;color:#1d4ed8;padding:2px 8px;border-radius:6px;font-size:.62rem;font-weight:700;">EfficientNet-B0</span>
+                  <span style="background:#f0fdf4;color:#15803d;padding:2px 8px;border-radius:6px;font-size:.62rem;font-weight:700;">CNN</span>
+                  <span style="background:#ede9fe;color:#6d28d9;padding:2px 8px;border-radius:6px;font-size:.62rem;font-weight:700;">Grad-CAM</span>
+                </div>
+
+                <div class="scan-result-row">
+                  <span class="scan-result-label">AI Prediction</span>
+                  <span class="prediction-chip">Glioma Detected</span>
+                </div>
+                <div class="scan-result-row mt-1" style="flex-direction:column;align-items:stretch;">
+                  <div class="d-flex justify-content-between mb-1">
+                    <span class="scan-result-label">Confidence Score</span>
+                    <span style="font-size:.8rem;font-weight:700;color:var(--primary);">94.7%</span>
+                  </div>
+                  <div class="conf-bar-track"><div class="conf-bar-fill" style="width:94.7%;"></div></div>
+                </div>
+                <div class="scan-status-row mt-2">
+                  <div class="scan-status-dot"></div>
+                  <div class="scan-status-text">Doctor confirmed · Report ready</div>
+                </div>
+              </div>
+
+              <!-- Floating badges -->
+              <div class="float-badge fb1">
+                <div class="fb-icon" style="background:#eff6ff;"><i class="fa-solid fa-brain" style="color:var(--primary);"></i></div>
+                <div><div style="font-size:.62rem;color:var(--text-4);font-weight:500;">Deep Learning</div><div>AI Model</div></div>
+              </div>
+              <div class="float-badge fb2">
+                <div class="fb-icon" style="background:#f0fdf4;"><i class="fa-solid fa-shield-check" style="color:#22c55e;"></i></div>
+                <div><div style="font-size:.62rem;color:var(--text-4);font-weight:500;">Accuracy</div><div style="color:#15803d;">98.4%</div></div>
+              </div>
+              <div class="float-badge fb3">
+                <div class="fb-icon" style="background:#fff7ed;"><i class="fa-solid fa-bolt" style="color:#f59e0b;"></i></div>
+                <div><div style="font-size:.62rem;color:var(--text-4);font-weight:500;">Analysis Speed</div><div style="color:#b45309;">&lt; 5 sec</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- STATS STRIP -->
+  <div class="lp-stats-strip">
+    <div class="container">
+      <div class="row g-0 text-center">
+        <div class="col-6 col-md-3">
+          <div class="lp-stat">
+            <div class="lp-stat-val counter-num" data-to="4">4</div>
+            <div class="lp-stat-label">Tumor Classes</div>
+            <div class="lp-stat-sub">Glioma · Meningioma · Pituitary · None</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="lp-stat">
+            <div class="lp-stat-val">98%+</div>
+            <div class="lp-stat-label">Model Accuracy</div>
+            <div class="lp-stat-sub">EfficientNet-B0 classification</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="lp-stat">
+            <div class="lp-stat-val">&lt;5s</div>
+            <div class="lp-stat-label">Scan Analysis</div>
+            <div class="lp-stat-sub">From MRI upload to AI result</div>
+          </div>
+        </div>
+        <div class="col-6 col-md-3">
+          <div class="lp-stat">
+            <div class="lp-stat-val counter-num" data-to="4">4</div>
+            <div class="lp-stat-label">Hospital Modules</div>
+            <div class="lp-stat-sub">Patient · Doctor · Lab · Admin</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <section class="lp-features">
+    <div class="container">
+      <div class="row align-items-end g-0 mb-5">
+        <div class="col-lg-6 reveal">
+          <div class="lp-section-eyebrow">Platform Capabilities</div>
+          <h2 class="lp-section-title">Clinical AI Meets<br>Hospital Management</h2>
+        </div>
+        <div class="col-lg-6 reveal reveal-delay-1">
+          <p class="lp-section-sub" style="margin-left:auto;">
+            Every stage of the diagnostic journey — from patient registration to final PDF report — handled in one unified platform.
+          </p>
+        </div>
+      </div>
+      <div class="row g-4">
+        <div class="col-md-6 col-lg-4">
+          <div class="lp-feature-card reveal reveal-delay-1">
+            <div class="lp-feature-icon" style="background:#dbeafe;"><i class="fa-solid fa-brain" style="color:#2563eb;"></i></div>
+            <h4>Dual AI Classification</h4>
+            <p>CNN extracts visual features — edges, textures, abnormal tissue. EfficientNet-B0 applies transfer learning for state-of-the-art accuracy across 4 tumor classes.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+          <div class="lp-feature-card reveal reveal-delay-2">
+            <div class="lp-feature-icon" style="background:#e0f2fe;"><i class="fa-solid fa-eye" style="color:#0284c7;"></i></div>
+            <h4>Grad-CAM Heatmaps</h4>
+            <p>Visual saliency maps highlight the exact MRI regions that influenced each prediction — making every AI decision interpretable and clinically trustworthy.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+          <div class="lp-feature-card reveal reveal-delay-3">
+            <div class="lp-feature-icon" style="background:#ede9fe;"><i class="fa-solid fa-hospital" style="color:#7c3aed;"></i></div>
+            <h4>End-to-End Workflow</h4>
+            <p>Full appointment lifecycle: booking → consultation → MRI request → lab scheduling → AI scan → doctor review → prescription → patient report.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+          <div class="lp-feature-card reveal reveal-delay-2">
+            <div class="lp-feature-icon" style="background:#fff7ed;"><i class="fa-solid fa-x-ray" style="color:#f59e0b;"></i></div>
+            <h4>Lab MRI Module</h4>
+            <p>Dedicated lab portal for receiving scan requests, scheduling MRI appointments, uploading images, and automatically triggering AI analysis upon upload.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+          <div class="lp-feature-card reveal reveal-delay-3">
+            <div class="lp-feature-icon" style="background:#f0fdf4;"><i class="fa-solid fa-file-medical" style="color:#16a34a;"></i></div>
+            <h4>Automated PDF Reports</h4>
+            <p>Professionally formatted reports include the original MRI scan, Grad-CAM overlay, AI prediction with confidence, doctor notes, and prescribed treatment.</p>
+          </div>
+        </div>
+        <div class="col-md-6 col-lg-4">
+          <div class="lp-feature-card reveal reveal-delay-4">
+            <div class="lp-feature-icon" style="background:#fff1f2;"><i class="fa-solid fa-bell" style="color:#dc2626;"></i></div>
+            <h4>Real-time Notifications</h4>
+            <p>Every role receives instant in-app alerts — appointment confirmations, scan uploads, low-confidence flags, diagnosis updates, and prescription notifications.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="lp-workflow">
+    <div class="container">
+      <div class="row g-5 align-items-center">
+        <div class="col-lg-6">
+          <div class="lp-section-eyebrow reveal">Clinical Workflow</div>
+          <h2 class="lp-section-title mb-5 reveal reveal-delay-1">From Symptom to<br>Confirmed Diagnosis</h2>
+
+          <div class="workflow-step">
+            <div class="workflow-num">1</div>
+            <div>
+              <h5>Patient Registers &amp; Books</h5>
+              <p>Patient creates an account, selects a specialist, chooses a date and time slot, and submits symptoms — all online.</p>
+            </div>
+          </div>
+          <div class="workflow-step">
+            <div class="workflow-num">2</div>
+            <div>
+              <h5>Doctor Consultation</h5>
+              <p>Doctor reviews patient history, evaluates symptoms, and decides: prescribe directly or request an MRI from the lab.</p>
+            </div>
+          </div>
+          <div class="workflow-step">
+            <div class="workflow-num">3</div>
+            <div>
+              <h5>Lab Schedules &amp; Scans</h5>
+              <p>Lab staff receive the MRI request, schedule the scan, perform the procedure, and upload the image to the system.</p>
+            </div>
+          </div>
+          <div class="workflow-step">
+            <div class="workflow-num">4</div>
+            <div>
+              <h5>AI Analysis (CNN + EfficientNet-B0)</h5>
+              <p>Deep learning models classify the tumor type in under 5 seconds. Confidence scores and Grad-CAM heatmaps are generated automatically.</p>
+            </div>
+          </div>
+          <div class="workflow-step">
+            <div class="workflow-num">5</div>
+            <div>
+              <h5>Doctor Reviews &amp; Prescribes</h5>
+              <p>Doctor validates the AI prediction, adds clinical notes, confirms the diagnosis, and prescribes treatment or follow-up care.</p>
+            </div>
+          </div>
+          <div class="workflow-step">
+            <div class="workflow-num">6</div>
+            <div>
+              <h5>Patient Downloads Report</h5>
+              <p>Patient receives a real-time notification and securely downloads a comprehensive PDF report including scan, heatmap, diagnosis, and prescription.</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Workflow visual -->
+        <div class="col-lg-6 d-none d-lg-block reveal reveal-delay-2">
+          <div class="p-4 rounded-4" style="background:linear-gradient(145deg,#f0f5ff,#f8fafc);border:1px solid var(--card-border);">
+            <div style="font-size:.68rem;text-transform:uppercase;letter-spacing:1px;font-weight:700;color:var(--text-4);margin-bottom:16px;">
+              <i class="fa-solid fa-diagram-project me-1" style="color:var(--primary);"></i>Pipeline Overview
+            </div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+              {% for icon,bg,c,t,s in [
+                ('fa-calendar-check', '#eff6ff', '#2563eb', 'Book',       'Patient schedules'),
+                ('fa-stethoscope',    '#f0fdf4', '#16a34a', 'Consult',    'Doctor reviews'),
+                ('fa-x-ray',          '#fff7ed', '#f59e0b', 'MRI Scan',   'Lab performs'),
+                ('fa-brain',          '#fff1f2', '#dc2626', 'AI Classify','CNN + EfficientNet'),
+                ('fa-eye',            '#ede9fe', '#7c3aed', 'Grad-CAM',   'Heatmap generated'),
+                ('fa-file-pdf',       '#e0f2fe', '#0891b2', 'PDF Report', 'Patient downloads')
+              ] %}
+              <div style="background:#fff;border-radius:12px;padding:14px;border:1px solid var(--card-border);box-shadow:var(--shadow-xs);transition:box-shadow .2s;" onmouseover="this.style.boxShadow='var(--shadow)'" onmouseout="this.style.boxShadow='var(--shadow-xs)'">
+                <div style="width:34px;height:34px;border-radius:9px;background:{{ bg }};display:flex;align-items:center;justify-content:center;margin-bottom:9px;">
+                  <i class="fa-solid {{ icon }}" style="color:{{ c }};font-size:.82rem;"></i>
+                </div>
+                <div style="font-family:'Sora',sans-serif;font-size:.79rem;font-weight:700;color:var(--text-1);margin-bottom:2px;">{{ t }}</div>
+                <div style="font-size:.72rem;color:var(--text-3);">{{ s }}</div>
+              </div>
+              {% endfor %}
+            </div>
+
+            <!-- Accuracy callout -->
+            <div style="margin-top:14px;background:#fff;border:1px solid #bfdbfe;border-radius:12px;padding:14px 16px;display:flex;align-items:center;gap:14px;">
+              <div style="width:42px;height:42px;border-radius:11px;background:linear-gradient(135deg,var(--primary),var(--accent));display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <i class="fa-solid fa-bolt" style="color:#fff;font-size:.95rem;"></i>
+              </div>
+              <div>
+                <div style="font-family:'Sora',sans-serif;font-size:.82rem;font-weight:700;color:var(--text-1);">Sub-5-second analysis</div>
+                <div style="font-size:.74rem;color:var(--text-3);">From MRI upload to AI prediction with Grad-CAM heatmap — instantly.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ROLES -->
+  <section class="lp-roles">
+    <div class="container">
+      <div class="text-center mb-5 reveal">
+        <div class="lp-section-eyebrow">Multi-Role Access</div>
+        <h2 class="lp-section-title">Built for Every Member<br>of the Care Team</h2>
+        <p class="lp-section-sub mx-auto mt-2">Four dedicated dashboards — each tailored to the specific needs of each stakeholder in the diagnostic process.</p>
+      </div>
+      <div class="row g-4">
+        <div class="col-md-6 col-lg-3">
+          <a href="/register" class="lp-role-card reveal reveal-delay-1">
+            <div class="role-icon" style="background:#eff6ff;"><i class="fa-solid fa-user-injured" style="color:#2563eb;"></i></div>
+            <h4>Patient</h4>
+            <p>Book appointments with specialists, track your appointment status in real time, receive AI-powered scan reports, and securely view prescriptions — all from one dashboard.</p>
+            <div class="role-cta">Register as Patient <i class="fa-solid fa-arrow-right"></i></div>
+          </a>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <a href="/register" class="lp-role-card reveal reveal-delay-2">
+            <div class="role-icon" style="background:#f0fdf4;"><i class="fa-solid fa-user-doctor" style="color:#16a34a;"></i></div>
+            <h4>Doctor</h4>
+            <p>Review AI predictions alongside Grad-CAM heatmaps, validate diagnoses, request MRI scans, prescribe treatments, and manage your availability and schedule.</p>
+            <div class="role-cta" style="color:#16a34a;">Register as Doctor <i class="fa-solid fa-arrow-right"></i></div>
+          </a>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <a href="/register" class="lp-role-card reveal reveal-delay-3">
+            <div class="role-icon" style="background:#ede9fe;"><i class="fa-solid fa-flask" style="color:#7c3aed;"></i></div>
+            <h4>Lab Staff</h4>
+            <p>Receive MRI scan requests from doctors, schedule scan appointments, upload MRI images, and trigger the AI analysis pipeline — all through the lab portal.</p>
+            <div class="role-cta" style="color:#7c3aed;">Join as Lab Staff <i class="fa-solid fa-arrow-right"></i></div>
+          </a>
+        </div>
+        <div class="col-md-6 col-lg-3">
+          <a href="/register" class="lp-role-card reveal reveal-delay-4">
+            <div class="role-icon" style="background:#fef3c7;"><i class="fa-solid fa-shield-halved" style="color:#d97706;"></i></div>
+            <h4>Admin</h4>
+            <p>Full system oversight — manage all user accounts, monitor every appointment, review AI prediction statistics, and maintain platform data integrity.</p>
+            <div class="role-cta" style="color:#b45309;">Admin Access <i class="fa-solid fa-arrow-right"></i></div>
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="lp-cta">
+    <div class="container lp-cta-inner">
+      <div class="lp-eyebrow mx-auto mb-4 reveal" style="width:fit-content;background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.2);color:rgba(255,255,255,.9);">
+        <span class="pulse-dot" style="background:#22c55e;"></span>Ready to get started?
+      </div>
+      <h2 class="reveal reveal-delay-1">The Future of Neurological<br>Diagnosis Starts Here</h2>
+      <p class="reveal reveal-delay-2">Join patients, doctors, and lab teams using BrainScan AI to deliver faster, more accurate, and fully explainable brain tumor diagnoses.</p>
+      <div class="d-flex gap-3 justify-content-center flex-wrap reveal reveal-delay-3">
+        <a href="/register" class="btn-cta-white"><i class="fa-solid fa-user-plus"></i> Create Free Account</a>
+        <a href="/login"    class="btn-cta-outline"><i class="fa-solid fa-right-to-bracket"></i> Sign In</a>
+      </div>
+      <div class="d-flex gap-4 justify-content-center flex-wrap mt-5 reveal reveal-delay-4" style="opacity:.55;">
+        {% for t in ['CNN + EfficientNet-B0','Grad-CAM Heatmaps','PDF Report Generation','Real-time Notifications','Secure &amp; Authenticated'] %}
+        <div style="display:flex;align-items:center;gap:6px;font-size:.78rem;color:#f1f5f9;font-weight:500;">
+          <i class="fa-solid fa-check" style="color:#22c55e;font-size:.6rem;"></i>{{ t }}
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="lp-footer">
+    <div class="container">
+      <div class="d-flex align-items-center justify-content-between flex-wrap gap-3">
+        <div class="d-flex align-items-center gap-2">
+          <div style="width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--primary),var(--accent));display:flex;align-items:center;justify-content:center;font-size:.68rem;color:#fff;flex-shrink:0;"><i class="fa-solid fa-brain"></i></div>
+          <span style="font-family:'Sora',sans-serif;font-size:.84rem;font-weight:700;color:var(--text-1);">BrainScan AI</span>
+        </div>
+        <p style="color:var(--text-4);font-size:.79rem;margin:0;">AI-Powered Brain Tumor Detection &amp; Hospital Management System</p>
+        <div class="d-flex gap-3">
+          <a href="/login"    style="color:var(--text-3);font-size:.8rem;text-decoration:none;font-weight:500;">Sign In</a>
+          <a href="/register" style="color:var(--primary);font-size:.8rem;text-decoration:none;font-weight:600;">Register Free</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+/* ── Navbar scroll shadow ── */
+const nav = document.getElementById('mainNav');
+window.addEventListener('scroll', () => nav.classList.toggle('scrolled', scrollY > 40), {passive:true});
+
+/* ── Hero Canvas: Neural Network Particle Animation ── */
+(function(){
+  const canvas = document.getElementById('heroCanvas');
+  if(!canvas) return;
+  const ctx = canvas.getContext('2d');
+  let W, H, particles = [];
+  const NUM = 80, MAX_DIST = 165, COLORS = ['rgba(37,99,235,', 'rgba(14,165,233,', 'rgba(99,102,241,'];
+
+  function resize(){
+    W = canvas.width  = canvas.offsetWidth;
+    H = canvas.height = canvas.offsetHeight;
+  }
+  window.addEventListener('resize', resize);
+  resize();
+
+  function rand(a, b){ return a + Math.random() * (b - a); }
+
+  class Particle {
+    constructor(){
+      this.reset();
+    }
+    reset(){
+      this.x  = rand(0, W);
+      this.y  = rand(0, H);
+      this.vx = rand(-0.38, 0.38);
+      this.vy = rand(-0.38, 0.38);
+      this.r  = rand(2.5, 5.5);
+      this.col = COLORS[Math.floor(Math.random() * COLORS.length)];
+      this.alpha = rand(0.55, 0.85);
+    }
+    update(){
+      this.x += this.vx;
+      this.y += this.vy;
+      if(this.x < -10 || this.x > W + 10 || this.y < -10 || this.y > H + 10) this.reset();
+    }
+    draw(){
+      ctx.beginPath();
+      ctx.arc(this.x, this.y, this.r, 0, Math.PI * 2);
+      ctx.fillStyle = this.col + this.alpha + ')';
+      ctx.fill();
+    }
+  }
+
+  for(let i = 0; i < NUM; i++) particles.push(new Particle());
+
+  function drawLines(){
+    for(let i = 0; i < particles.length; i++){
+      for(let j = i + 1; j < particles.length; j++){
+        const dx = particles[i].x - particles[j].x;
+        const dy = particles[i].y - particles[j].y;
+        const dist = Math.sqrt(dx*dx + dy*dy);
+        if(dist < MAX_DIST){
+          const op = (1 - dist / MAX_DIST) * 0.42;
+          ctx.beginPath();
+          ctx.moveTo(particles[i].x, particles[i].y);
+          ctx.lineTo(particles[j].x, particles[j].y);
+          ctx.strokeStyle = 'rgba(37,99,235,' + op + ')';
+          ctx.lineWidth = 1.5;
+          ctx.stroke();
+        }
+      }
+    }
+  }
+
+  function loop(){
+    ctx.clearRect(0, 0, W, H);
+    drawLines();
+    particles.forEach(p => { p.update(); p.draw(); });
+    requestAnimationFrame(loop);
+  }
+  loop();
+})();
+
+/* ── Scroll reveal ── */
+const ro = new IntersectionObserver(es => es.forEach(e => {
+  if(e.isIntersecting) e.target.classList.add('visible');
+}), {threshold: .1});
+document.querySelectorAll('.reveal').forEach(el => ro.observe(el));
+
+/* ── Workflow steps ── */
+const wo = new IntersectionObserver(es => es.forEach(e => {
+  if(e.isIntersecting) e.target.classList.add('visible');
+}), {threshold: .12});
+document.querySelectorAll('.workflow-step').forEach(el => wo.observe(el));
+
+/* ── Feature 3D tilt ── */
+document.querySelectorAll('.lp-feature-card').forEach(c => {
+  c.addEventListener('mousemove', e => {
+    const r = c.getBoundingClientRect();
+    const x = ((e.clientX - r.left) / r.width  - .5) * 9;
+    const y = ((e.clientY - r.top)  / r.height - .5) * -9;
+    c.style.transform = `perspective(600px) rotateX(${y}deg) rotateY(${x}deg) translateY(-5px)`;
+  });
+  c.addEventListener('mouseleave', () => c.style.transform = '');
+});
+
+/* ── Animated counter ── */
+function runCounters(){
+  document.querySelectorAll('.counter-num').forEach(el => {
+    const end = parseInt(el.dataset.to);
+    if(isNaN(end)) return;
+    const dur = 1600, st = performance.now();
+    function tick(now){
+      const p = Math.min((now - st) / dur, 1);
+      el.textContent = Math.round((1 - Math.pow(1 - p, 3)) * end);
+      if(p < 1) requestAnimationFrame(tick);
+    }
+    requestAnimationFrame(tick);
+  });
+}
+const strip = document.querySelector('.lp-stats-strip');
+if(strip) new IntersectionObserver(([e]) => { if(e.isIntersecting) runCounters(); }, {threshold:.5}).observe(strip);
+</script>
+{% endblock %}

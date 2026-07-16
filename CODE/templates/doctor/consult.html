@@ -1,0 +1,99 @@
+{% extends "base.html" %}
+{% block title %}First Consultation — {{ patient.name }}{% endblock %}
+{% block page_title %}First Consultation{% endblock %}
+{% block content %}
+
+<div class="row g-4">
+  <!-- Patient Info -->
+  <div class="col-lg-4">
+    <div class="card">
+      <div class="card-header-custom"><i class="fa-solid fa-user" style="color:#2563eb;"></i> Patient Details</div>
+      <div class="p-4">
+        <div class="d-flex align-items-center gap-3 mb-4">
+          <div style="width:48px;height:48px;border-radius:13px;background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Sora',sans-serif;font-weight:700;font-size:1.2rem;flex-shrink:0;">{{ patient.name[0] }}</div>
+          <div>
+            <div class="fw-700">{{ patient.name }}</div>
+            <div style="color:#64748b;font-size:0.8rem;">{{ patient.phone or '—' }}</div>
+          </div>
+        </div>
+        <div class="mb-3">
+          <div style="font-size:0.75rem;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;margin-bottom:4px;">Appointment</div>
+          <div class="fw-600">{{ appt.appt_date }}</div>
+          <div style="color:#64748b;font-size:0.82rem;">{{ appt.time_slot }}</div>
+        </div>
+        <div class="mb-3">
+          <div style="font-size:0.75rem;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;margin-bottom:4px;">Priority</div>
+          <span class="priority-{{ appt.priority.lower() }}">{{ appt.priority }}</span>
+        </div>
+        <div>
+          <div style="font-size:0.75rem;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;margin-bottom:6px;">Reported Symptoms</div>
+          <div class="p-3 rounded-3" style="background:#f8fafc;font-style:italic;font-size:0.85rem;color:#374151;border:1px solid #f1f5f9;">
+            {{ appt.reason or 'No symptoms described.' }}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Decision Panel -->
+  <div class="col-lg-8">
+    <div class="card mb-4">
+      <div class="card-header-custom">
+        <i class="fa-solid fa-stethoscope" style="color:#2563eb;"></i> Consultation Decision
+      </div>
+      <div class="p-4">
+        <p style="color:#64748b;font-size:0.875rem;margin-bottom:22px;">Based on the patient's symptoms, choose the appropriate course of action:</p>
+        <div class="row g-3">
+
+          <!-- Option 1: Request MRI -->
+          <div class="col-md-6">
+            <div class="h-100 rounded-3 p-4" style="border:2px solid #dce8ff;background:#f8fbff;transition:all 0.2s;" onmouseenter="this.style.borderColor='var(--primary)'" onmouseleave="this.style.borderColor='#dce8ff'">
+              <div class="text-center mb-3">
+                <div style="width:52px;height:52px;border-radius:14px;background:rgba(37,99,235,0.12);display:flex;align-items:center;justify-content:center;margin:0 auto;font-size:1.3rem;color:#2563eb;">
+                  <i class="fa-solid fa-x-ray"></i>
+                </div>
+              </div>
+              <h6 class="fw-700 text-center mb-2" style="font-family:'Sora',sans-serif;">MRI Scan Required</h6>
+              <p style="color:#64748b;font-size:0.83rem;text-align:center;margin-bottom:16px;">Request an MRI scan from the lab. They'll schedule, perform, and send results back for AI-assisted review.</p>
+              <button class="btn btn-primary w-100" data-bs-toggle="collapse" data-bs-target="#mriForm" type="button">
+                <i class="fa-solid fa-x-ray"></i> Request MRI Scan
+              </button>
+              <div class="collapse mt-3" id="mriForm">
+                <form method="POST" action="/doctor/appointment/{{ appt.id }}/request-mri">
+                  <label class="form-label">Notes for Lab <span style="color:#94a3b8;font-weight:400;">(optional)</span></label>
+                  <textarea name="doctor_notes" class="form-control mb-3" rows="3"
+                    placeholder="Scan area, urgency, specific instructions..."></textarea>
+                  <button type="submit" class="btn btn-primary w-100">
+                    <i class="fa-solid fa-paper-plane"></i> Send to Lab
+                  </button>
+                </form>
+              </div>
+            </div>
+          </div>
+
+          <!-- Option 2: Prescribe -->
+          <div class="col-md-6">
+            <div class="h-100 rounded-3 p-4" style="border:2px solid #dcfce7;background:#f8fff8;transition:all 0.2s;" onmouseenter="this.style.borderColor='#22c55e'" onmouseleave="this.style.borderColor='#dcfce7'">
+              <div class="text-center mb-3">
+                <div style="width:52px;height:52px;border-radius:14px;background:rgba(34,197,94,0.12);display:flex;align-items:center;justify-content:center;margin:0 auto;font-size:1.3rem;color:#22c55e;">
+                  <i class="fa-solid fa-prescription-bottle-medical"></i>
+                </div>
+              </div>
+              <h6 class="fw-700 text-center mb-2" style="font-family:'Sora',sans-serif;">Prescribe Treatment</h6>
+              <p style="color:#64748b;font-size:0.83rem;text-align:center;margin-bottom:16px;">No MRI required. Provide a diagnosis and prescribe medicines directly. Patient will be notified immediately.</p>
+              <a href="/doctor/appointment/{{ appt.id }}/prescribe" class="btn btn-success w-100">
+                <i class="fa-solid fa-prescription"></i> Write Prescription
+              </a>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+
+    <a href="/doctor/appointments" class="btn btn-outline-secondary">
+      <i class="fa-solid fa-arrow-left"></i> Back to Appointments
+    </a>
+  </div>
+</div>
+{% endblock %}

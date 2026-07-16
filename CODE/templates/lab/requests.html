@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block title %}MRI Requests{% endblock %}
+{% block page_title %}MRI Requests{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <div class="page-header-title">MRI Requests</div>
+    <div class="page-header-sub">Schedule and upload MRI scans for patients</div>
+  </div>
+</div>
+
+<!-- Filter Tabs -->
+<div class="mb-4 d-flex gap-2 flex-wrap">
+  <a href="/lab/requests?status=all"
+     class="btn btn-sm {% if status_filter=='all' %}btn-primary{% else %}btn-outline-secondary{% endif %}">
+     All Requests
+  </a>
+  <a href="/lab/requests?status=pending"
+     class="btn btn-sm {% if status_filter=='pending' %}btn-warning{% else %}btn-outline-secondary{% endif %}">
+     <i class="fa-solid fa-hourglass-half me-1"></i> Pending
+  </a>
+  <a href="/lab/requests?status=scheduled"
+     class="btn btn-sm {% if status_filter=='scheduled' %}btn-info{% else %}btn-outline-secondary{% endif %}">
+     <i class="fa-solid fa-calendar-check me-1"></i> Scheduled
+  </a>
+  <a href="/lab/requests?status=uploaded"
+     class="btn btn-sm {% if status_filter=='uploaded' %}btn-success{% else %}btn-outline-secondary{% endif %}">
+     <i class="fa-solid fa-circle-check me-1"></i> Uploaded
+  </a>
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table mb-0">
+      <thead>
+        <tr><th>#</th><th>Patient</th><th>Doctor</th><th>Notes</th><th>Scheduled</th><th>Status</th><th>Action</th></tr>
+      </thead>
+      <tbody>
+        {% for req in requests.items %}
+        <tr>
+          <td style="color:#94a3b8;font-size:0.8rem;">#{{ req.id }}</td>
+          <td>
+            <div class="fw-600">{{ req.patient.name }}</div>
+            <div style="color:#94a3b8;font-size:0.78rem;">{{ req.patient.phone or '' }}</div>
+          </td>
+          <td style="color:#64748b;">Dr. {{ req.doctor.name }}</td>
+          <td style="max-width:180px;color:#64748b;font-size:0.82rem;">{{ req.doctor_notes or '—' }}</td>
+          <td>
+            {% if req.scheduled_date %}
+              <div class="fw-600">{{ req.scheduled_date }}</div>
+              <div style="color:#64748b;font-size:0.8rem;">{{ req.scheduled_time }}</div>
+            {% else %}
+              <span style="color:#94a3b8;">Not scheduled</span>
+            {% endif %}
+          </td>
+          <td><span class="status-badge status-{{ req.status }}">{{ req.status|replace('_',' ')|title }}</span></td>
+          <td style="min-width:160px;">
+            {% if req.status == 'pending' %}
+              <button class="btn btn-sm btn-warning" data-bs-toggle="collapse"
+                      data-bs-target="#scheduleForm{{ req.id }}" type="button">
+                <i class="fa-solid fa-calendar-plus"></i> Schedule
+              </button>
+              <div class="collapse mt-2" id="scheduleForm{{ req.id }}">
+                <form method="POST" action="/lab/request/{{ req.id }}/schedule"
+                      class="p-3 rounded-3" style="background:#f8fafc;border:1px solid #f1f5f9;">
+                  <label style="font-size:0.75rem;font-weight:600;color:#64748b;margin-bottom:4px;display:block;">Date</label>
+                  <input type="date" name="scheduled_date" class="form-control form-control-sm mb-2" required>
+                  <label style="font-size:0.75rem;font-weight:600;color:#64748b;margin-bottom:4px;display:block;">Time</label>
+                  <input type="time" name="scheduled_time" class="form-control form-control-sm mb-2" required>
+                  <button type="submit" class="btn btn-sm btn-success w-100">
+                    <i class="fa-solid fa-check"></i> Confirm Schedule
+                  </button>
+                </form>
+              </div>
+            {% elif req.status == 'scheduled' %}
+              <a href="/lab/request/{{ req.id }}/upload" class="btn btn-sm btn-primary">
+                <i class="fa-solid fa-upload"></i> Upload MRI
+              </a>
+            {% elif req.status == 'uploaded' %}
+              <span style="color:#15803d;font-size:0.82rem;font-weight:600;">
+                <i class="fa-solid fa-circle-check me-1"></i>Complete
+              </span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="7">
+          <div class="empty-state">
+            <i class="fa-solid fa-x-ray"></i>
+            <h6>No Requests Found</h6>
+            <p>MRI requests matching this filter will appear here.</p>
+          </div>
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% if requests.pages > 1 %}
+<div class="pagination-wrapper">
+  <nav><ul class="pagination">
+    <li class="page-item {% if not requests.has_prev %}disabled{% endif %}">
+      <a class="page-link" href="?status={{ status_filter }}&page={{ requests.prev_num }}"><i class="fa-solid fa-chevron-left"></i></a>
+    </li>
+    {% for p in requests.iter_pages() %}
+      {% if p %}<li class="page-item {% if p==requests.page %}active{% endif %}"><a class="page-link" href="?status={{ status_filter }}&page={{ p }}">{{ p }}</a></li>
+      {% else %}<li class="page-item disabled"><span class="page-link">…</span></li>{% endif %}
+    {% endfor %}
+    <li class="page-item {% if not requests.has_next %}disabled{% endif %}">
+      <a class="page-link" href="?status={{ status_filter }}&page={{ requests.next_num }}"><i class="fa-solid fa-chevron-right"></i></a>
+    </li>
+  </ul></nav>
+</div>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Upload MRI — {{ mri_req.patient.name }}{% endblock %}
+{% block page_title %}Upload MRI Scan{% endblock %}
+{% block content %}
+
+<div class="row g-4">
+
+  <!-- Request Details Sidebar -->
+  <div class="col-lg-4">
+    <div class="card">
+      <div class="card-header-custom"><i class="fa-solid fa-circle-info" style="color:#6366f1;"></i> Request Details</div>
+      <div class="p-4">
+        <div class="d-flex align-items-center gap-3 mb-4">
+          <div style="width:46px;height:46px;border-radius:13px;background:linear-gradient(135deg,#6366f1,#8b5cf6);color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Sora',sans-serif;font-weight:700;font-size:1.2rem;flex-shrink:0;">{{ mri_req.patient.name[0] }}</div>
+          <div>
+            <div class="fw-700">{{ mri_req.patient.name }}</div>
+            <div style="color:#64748b;font-size:0.8rem;">{{ mri_req.patient.phone or '—' }}</div>
+          </div>
+        </div>
+        <div class="mb-3">
+          <div style="font-size:0.72rem;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;margin-bottom:4px;">Requesting Doctor</div>
+          <div class="fw-600">Dr. {{ mri_req.doctor.name }}</div>
+        </div>
+        <div class="mb-3">
+          <div style="font-size:0.72rem;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;margin-bottom:4px;">Scheduled</div>
+          <div class="fw-600">{{ mri_req.scheduled_date }}</div>
+          <div style="color:#64748b;font-size:0.82rem;">{{ mri_req.scheduled_time }}</div>
+        </div>
+        {% if mri_req.doctor_notes %}
+        <div>
+          <div style="font-size:0.72rem;color:#94a3b8;text-transform:uppercase;letter-spacing:0.5px;font-weight:600;margin-bottom:6px;">Doctor's Notes</div>
+          <div class="p-3 rounded-3" style="background:#f8fafc;border:1px solid #f1f5f9;font-style:italic;font-size:0.85rem;color:#374151;line-height:1.6;">
+            {{ mri_req.doctor_notes }}
+          </div>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Upload Panel -->
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-header-custom">
+        <i class="fa-solid fa-cloud-arrow-up" style="color:#6366f1;"></i> Upload MRI Scan Image
+      </div>
+      <div class="p-4">
+        <div class="tip-box info mb-4">
+          <i class="fa-solid fa-robot"></i>
+          <div>After uploading, the AI model will automatically analyse the scan and send results to <strong>Dr. {{ mri_req.doctor.name }}</strong> for review.</div>
+        </div>
+
+        <form method="POST" enctype="multipart/form-data" id="uploadForm">
+          <div class="upload-zone mb-4" id="dropZone" onclick="document.getElementById('scanInput').click()">
+            <i class="fa-solid fa-x-ray"></i>
+            <h6>Click to select MRI scan</h6>
+            <p>PNG, JPG, JPEG — high resolution recommended</p>
+            <div id="file-name" style="color:#6366f1;font-size:0.83rem;font-weight:600;margin-top:6px;"></div>
+            <img id="scan-preview" src="" style="max-width:240px;max-height:180px;margin-top:14px;border-radius:12px;border:2px solid #e8eef6;display:none;">
+          </div>
+          <input type="file" id="scanInput" name="scan" accept=".png,.jpg,.jpeg" style="display:none;" onchange="previewFile(this)" required>
+
+          <div class="d-flex gap-3">
+            <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+              <i class="fa-solid fa-brain"></i> Upload &amp; Run AI Analysis
+            </button>
+            <a href="/lab/requests" class="btn btn-outline-secondary btn-lg">Cancel</a>
+          </div>
+        </form>
+
+        <div id="loading" style="display:none;" class="text-center mt-4 p-4">
+          <div class="spinner-border" style="color:#6366f1;" role="status"></div>
+          <p style="color:#64748b;margin-top:12px;font-size:0.9rem;">Running AI analysis — this may take a moment...</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+function previewFile(input) {
+  if (input.files && input.files[0]) {
+    document.getElementById('file-name').textContent = input.files[0].name;
+    const reader = new FileReader();
+    reader.onload = function(ev) {
+      const p = document.getElementById('scan-preview');
+      p.src = ev.target.result;
+      p.style.display = 'block';
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+document.getElementById('uploadForm').onsubmit = function() {
+  document.getElementById('submitBtn').disabled = true;
+  document.getElementById('submitBtn').innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Uploading...';
+  document.getElementById('loading').style.display = 'block';
+};
+</script>
+{% endblock %}

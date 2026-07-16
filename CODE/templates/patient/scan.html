@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block title %}Upload MRI Scan{% endblock %}
+{% block page_title %}Upload MRI Scan{% endblock %}
+{% block content %}
+
+<div class="row justify-content-center">
+  <div class="col-lg-7">
+
+    <!-- Appointment Card -->
+    <div class="card mb-4" style="border-left:3px solid var(--primary);">
+      <div class="p-4">
+        <div class="d-flex align-items-center gap-3">
+          <div class="stat-icon teal"><i class="fa-solid fa-calendar-check"></i></div>
+          <div>
+            <div class="fw-700" style="font-size:0.92rem;">Appointment #{{ appt.id }}</div>
+            <div style="color:#64748b;font-size:0.82rem;">Dr. {{ appt.doctor.name }} &bull; {{ appt.appt_date }} at {{ appt.time_slot }}</div>
+            {% if appt.reason %}<div style="color:#94a3b8;font-size:0.79rem;margin-top:2px;">{{ appt.reason }}</div>{% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Upload Card -->
+    <div class="card mb-4">
+      <div class="card-header-custom">
+        <i class="fa-solid fa-cloud-arrow-up" style="color:#2563eb;"></i> Upload MRI Scan
+      </div>
+      <div class="p-4">
+        <form method="POST" enctype="multipart/form-data" id="scanForm">
+
+          <div class="upload-zone mb-4" id="dropZone" onclick="document.getElementById('scanInput').click()">
+            <i class="fa-solid fa-brain"></i>
+            <h6>Click to select MRI image</h6>
+            <p>PNG, JPG, JPEG supported · High quality recommended</p>
+            <div id="file-name" style="color:var(--primary);font-size:0.83rem;font-weight:600;margin-top:6px;"></div>
+            <img id="preview" src="" style="max-width:220px;max-height:170px;margin-top:14px;border-radius:12px;border:2px solid #e8eef6;display:none;">
+          </div>
+          <input type="file" id="scanInput" name="scan" accept="image/*" style="display:none;"
+                 onchange="previewFile(this)" required>
+
+          <div class="d-flex gap-3">
+            <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+              <i class="fa-solid fa-brain"></i> Analyse with AI
+            </button>
+            <a href="/patient/appointments" class="btn btn-outline-secondary btn-lg">Back</a>
+          </div>
+        </form>
+
+        <div id="loading" style="display:none;" class="text-center mt-4 p-4">
+          <div class="spinner-border" style="color:var(--primary);" role="status"></div>
+          <p style="color:#64748b;margin-top:12px;font-size:0.9rem;">Running AI analysis — this may take a moment...</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="tip-box info">
+      <i class="fa-solid fa-circle-info"></i>
+      <div><strong>Tips for best results:</strong> Use clear, high-resolution MRI images. Ensure the scan is properly oriented. Blurry or low-quality images may reduce prediction accuracy.</div>
+    </div>
+  </div>
+</div>
+
+<script>
+function previewFile(input) {
+  if (input.files && input.files[0]) {
+    document.getElementById('file-name').textContent = input.files[0].name;
+    const reader = new FileReader();
+    reader.onload = e => {
+      const preview = document.getElementById('preview');
+      preview.src = e.target.result;
+      preview.style.display = 'block';
+    };
+    reader.readAsDataURL(input.files[0]);
+  }
+}
+document.getElementById('scanForm').onsubmit = function() {
+  document.getElementById('submitBtn').disabled = true;
+  document.getElementById('submitBtn').innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Analysing...';
+  document.getElementById('loading').style.display = 'block';
+};
+</script>
+{% endblock %}

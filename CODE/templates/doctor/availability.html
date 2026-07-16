@@ -1,0 +1,94 @@
+{% extends "base.html" %}
+{% block title %}Manage Availability{% endblock %}
+{% block page_title %}Availability Calendar{% endblock %}
+{% block content %}
+
+<div class="row g-4">
+
+  <!-- Block a date -->
+  <div class="col-lg-4">
+    <div class="form-card">
+      <div class="d-flex align-items-center gap-3 mb-4">
+        <div style="width:38px;height:38px;border-radius:10px;background:rgba(244,63,94,0.1);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <i class="fa-solid fa-calendar-xmark" style="color:#f43f5e;font-size:0.9rem;"></i>
+        </div>
+        <div class="fw-700" style="font-size:0.95rem;">Block a Date</div>
+      </div>
+      <form method="POST">
+        <input type="hidden" name="action" value="block">
+        <div class="mb-3">
+          <label class="form-label">Date</label>
+          <input type="date" name="date" class="form-control" required id="block_date">
+        </div>
+        <div class="mb-4">
+          <label class="form-label">Reason</label>
+          <select name="reason" class="form-select">
+            <option value="Personal leave">Personal leave</option>
+            <option value="Conference/Training">Conference / Training</option>
+            <option value="Holiday">Holiday</option>
+            <option value="Out of station">Out of station</option>
+            <option value="Unavailable">Other / Unavailable</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-danger w-100">
+          <i class="fa-solid fa-ban"></i> Mark as Unavailable
+        </button>
+      </form>
+
+      <div class="tip-box warning mt-4">
+        <i class="fa-solid fa-circle-info"></i>
+        <div><strong>Note:</strong> Blocking a date prevents new bookings. Existing appointments are not automatically cancelled.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Blocked dates list -->
+  <div class="col-lg-8">
+    <div class="card">
+      <div class="card-header-custom">
+        <i class="fa-solid fa-calendar-days" style="color:#f43f5e;"></i> Blocked Dates
+        {% if blocked %}<span style="background:#fff1f2;color:#be123c;font-size:0.72rem;padding:3px 10px;border-radius:20px;font-weight:600;margin-left:8px;">{{ blocked|length }} blocked</span>{% endif %}
+      </div>
+      {% if blocked %}
+      <div class="table-responsive">
+        <table class="table mb-0">
+          <thead>
+            <tr><th>Date</th><th>Reason</th><th>Blocked On</th><th></th></tr>
+          </thead>
+          <tbody>
+            {% for b in blocked %}
+            <tr>
+              <td class="fw-600">{{ b.date }}</td>
+              <td style="color:#64748b;">{{ b.reason }}</td>
+              <td style="color:#94a3b8;font-size:0.82rem;">{{ b.created_at.strftime('%d %b %Y') }}</td>
+              <td>
+                <form method="POST" style="display:inline;">
+                  <input type="hidden" name="action" value="unblock">
+                  <input type="hidden" name="block_id" value="{{ b.id }}">
+                  <button type="submit" class="btn btn-sm btn-success"
+                          onclick="return confirm('Unblock {{ b.date }}?')">
+                    <i class="fa-solid fa-circle-check"></i> Unblock
+                  </button>
+                </form>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      {% else %}
+      <div class="empty-state">
+        <i class="fa-solid fa-calendar-check" style="color:#22c55e;opacity:0.4;"></i>
+        <h6>All Clear</h6>
+        <p>No blocked dates. You're available on all days.</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+document.getElementById('block_date').min = new Date().toISOString().split('T')[0];
+</script>
+{% endblock %}

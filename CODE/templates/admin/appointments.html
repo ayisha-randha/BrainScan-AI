@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}All Appointments{% endblock %}
+{% block page_title %}All Appointments{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <div class="page-header-title">All Appointments</div>
+    <div class="page-header-sub">System-wide appointment records</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table mb-0">
+      <thead>
+        <tr><th>#</th><th>Patient</th><th>Doctor</th><th>Date</th><th>Time</th><th>Priority</th><th>Status</th><th>Reason</th></tr>
+      </thead>
+      <tbody>
+        {% for appt in appts.items %}
+        <tr>
+          <td style="color:#94a3b8;font-size:0.8rem;">#{{ appt.id }}</td>
+          <td class="fw-600">{{ appt.patient.name }}</td>
+          <td style="color:#64748b;">Dr. {{ appt.doctor.name }}</td>
+          <td class="fw-600">{{ appt.appt_date }}</td>
+          <td style="color:#64748b;">{{ appt.time_slot }}</td>
+          <td><span class="priority-{{ appt.priority.lower() }}">{{ appt.priority }}</span></td>
+          <td><span class="status-badge status-{{ appt.status }}">{{ appt.status|replace('_',' ')|title }}</span></td>
+          <td style="max-width:200px;color:#94a3b8;font-size:0.82rem;">{{ appt.reason or '—' }}</td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8">
+          <div class="empty-state">
+            <i class="fa-solid fa-calendar"></i>
+            <h6>No Appointments Yet</h6>
+            <p>Appointments will appear here once patients start booking.</p>
+          </div>
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% if appts.pages > 1 %}
+<div class="pagination-wrapper">
+  <nav><ul class="pagination">
+    <li class="page-item {% if not appts.has_prev %}disabled{% endif %}"><a class="page-link" href="?page={{ appts.prev_num }}"><i class="fa-solid fa-chevron-left"></i></a></li>
+    {% for p in appts.iter_pages() %}
+      {% if p %}<li class="page-item {% if p==appts.page %}active{% endif %}"><a class="page-link" href="?page={{ p }}">{{ p }}</a></li>
+      {% else %}<li class="page-item disabled"><span class="page-link">…</span></li>{% endif %}
+    {% endfor %}
+    <li class="page-item {% if not appts.has_next %}disabled{% endif %}"><a class="page-link" href="?page={{ appts.next_num }}"><i class="fa-solid fa-chevron-right"></i></a></li>
+  </ul></nav>
+</div>
+{% endif %}
+{% endblock %}

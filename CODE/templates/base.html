@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}BrainScan AI{% endblock %}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+
+{% if session.user_id %}
+<div class="d-flex" id="app-wrapper">
+
+  <nav id="sidebar" class="sidebar">
+    <div class="sidebar-brand">
+      <div class="sidebar-brand-icon"><i class="fa-solid fa-brain"></i></div>
+      <div class="sidebar-brand-text">
+        <span class="sidebar-brand-name">BrainScan AI</span>
+        <span class="sidebar-brand-tag">Medical Platform</span>
+      </div>
+    </div>
+
+    {% if session.role == 'patient' %}
+    <div class="nav-section-label">Navigation</div>
+    <ul class="sidebar-nav">
+      <li><a href="/patient/dashboard"    class="{% if request.path=='/patient/dashboard' %}active{% endif %}"><i class="fa-solid fa-house-medical"></i><span>Dashboard</span></a></li>
+      <li><a href="/patient/book"         class="{% if '/patient/book' in request.path %}active{% endif %}"><i class="fa-solid fa-calendar-plus"></i><span>Book Appointment</span></a></li>
+      <li><a href="/patient/appointments" class="{% if '/patient/appointments' in request.path %}active{% endif %}"><i class="fa-solid fa-calendar-check"></i><span>My Appointments</span></a></li>
+      <li><a href="/patient/prescriptions"class="{% if '/patient/prescriptions' in request.path %}active{% endif %}"><i class="fa-solid fa-prescription-bottle-medical"></i><span>Prescriptions</span></a></li>
+    </ul>
+    {% elif session.role == 'doctor' %}
+    <div class="nav-section-label">Navigation</div>
+    <ul class="sidebar-nav">
+      <li><a href="/doctor/dashboard"    class="{% if request.path=='/doctor/dashboard' %}active{% endif %}"><i class="fa-solid fa-house-medical"></i><span>Dashboard</span></a></li>
+      <li><a href="/doctor/appointments" class="{% if '/doctor/appointments' in request.path %}active{% endif %}"><i class="fa-solid fa-calendar-check"></i><span>Appointments</span></a></li>
+      <li><a href="/doctor/scans"        class="{% if '/doctor/scans' in request.path %}active{% endif %}"><i class="fa-solid fa-microscope"></i><span>Scan Reviews</span></a></li>
+      <li><a href="/doctor/availability" class="{% if '/doctor/availability' in request.path %}active{% endif %}"><i class="fa-solid fa-calendar-days"></i><span>Availability</span></a></li>
+    </ul>
+    {% elif session.role == 'lab' %}
+    <div class="nav-section-label">Lab Portal</div>
+    <ul class="sidebar-nav">
+      <li><a href="/lab/dashboard" class="{% if request.path=='/lab/dashboard' %}active{% endif %}"><i class="fa-solid fa-house-medical"></i><span>Dashboard</span></a></li>
+      <li><a href="/lab/requests"  class="{% if '/lab/requests' in request.path %}active{% endif %}"><i class="fa-solid fa-x-ray"></i><span>MRI Requests</span></a></li>
+    </ul>
+    {% elif session.role == 'admin' %}
+    <div class="nav-section-label">Administration</div>
+    <ul class="sidebar-nav">
+      <li><a href="/admin/dashboard"    class="{% if request.path=='/admin/dashboard' %}active{% endif %}"><i class="fa-solid fa-gauge-high"></i><span>Dashboard</span></a></li>
+      <li><a href="/admin/users"        class="{% if '/admin/users' in request.path %}active{% endif %}"><i class="fa-solid fa-users"></i><span>Users</span></a></li>
+      <li><a href="/admin/appointments" class="{% if '/admin/appointments' in request.path %}active{% endif %}"><i class="fa-solid fa-calendar"></i><span>Appointments</span></a></li>
+      <li><a href="/admin/scans"        class="{% if '/admin/scans' in request.path %}active{% endif %}"><i class="fa-solid fa-microscope"></i><span>Scans</span></a></li>
+    </ul>
+    {% endif %}
+
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <div class="user-avatar">{{ session.name[0].upper() }}</div>
+        <div>
+          <div class="user-name">{{ session.name }}</div>
+          <div class="user-role">{{ session.role | capitalize }}</div>
+        </div>
+      </div>
+      <div class="sidebar-footer-links">
+        <a href="/profile" class="btn-logout"><i class="fa-solid fa-user-pen"></i><span>Edit Profile</span></a>
+        <a href="/logout"  class="btn-logout"><i class="fa-solid fa-right-from-bracket"></i><span>Sign Out</span></a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="main-content">
+    <div class="topbar">
+      <button class="btn-toggle-sidebar" onclick="toggleSidebar()"><i class="fa-solid fa-bars"></i></button>
+      <div class="topbar-title">{% block page_title %}{% endblock %}</div>
+      <div class="topbar-right">
+        <div class="notif-wrapper dropdown">
+          <button class="notif-btn dropdown-toggle" data-bs-toggle="dropdown" onclick="markAllRead()" aria-expanded="false">
+            <i class="fa-solid fa-bell"></i>
+            {% if unread_count > 0 %}<span class="notif-badge">{{ unread_count }}</span>{% endif %}
+          </button>
+          <div class="dropdown-menu dropdown-menu-end notif-dropdown">
+            <div class="notif-header">
+              <span>Notifications</span>
+              {% if unread_count > 0 %}<span style="font-size:0.72rem;color:#1d4ed8;font-weight:600;">{{ unread_count }} new</span>{% endif %}
+            </div>
+            {% if notifications %}
+              {% for n in notifications %}
+              <a href="{{ n.link }}" class="notif-item {% if not n.is_read %}unread{% endif %}">
+                <div class="notif-icon"><i class="fa-solid {{ n.icon }}"></i></div>
+                <div>
+                  <div class="notif-msg">{{ n.message }}</div>
+                  <div class="notif-time">{{ n.created_at.strftime('%d %b, %I:%M %p') }}</div>
+                </div>
+              </a>
+              {% endfor %}
+            {% else %}
+              <div class="notif-empty"><i class="fa-regular fa-bell-slash d-block mb-2" style="font-size:1.3rem;opacity:0.3;"></i>No notifications yet</div>
+            {% endif %}
+          </div>
+        </div>
+        <span class="badge-role badge-{{ session.role }}">{{ session.role | capitalize }}</span>
+      </div>
+    </div>
+
+    <div class="page-body">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}{% for cat, msg in messages %}
+          <div class="alert alert-{{ cat }} alert-dismissible fade show mb-3" role="alert">
+            <i class="fa-solid fa-{% if cat=='success' %}circle-check{% elif cat=='danger' %}circle-xmark{% elif cat=='warning' %}triangle-exclamation{% else %}circle-info{% endif %} me-2"></i>
+            {{ msg }}<button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}{% endif %}
+      {% endwith %}
+      {% block content %}{% endblock %}
+    </div>
+  </div>
+</div>
+
+{% else %}
+{{ self.content() }}
+{% endif %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('collapsed');
+  document.querySelector('.main-content').classList.toggle('expanded');
+}
+function markAllRead() {
+  fetch('/notifications/mark-read', { method: 'POST' }).then(() => {
+    document.querySelectorAll('.notif-badge').forEach(el => el.remove());
+    document.querySelectorAll('.notif-item.unread').forEach(el => el.classList.remove('unread'));
+  });
+}
+</script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

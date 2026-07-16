@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}Patient Dashboard{% endblock %}
+{% block page_title %}My Dashboard{% endblock %}
+{% block content %}
+
+<!-- Welcome Banner -->
+<div class="mb-4 p-4 rounded-3 animate-in" style="background:linear-gradient(135deg,#eff6ff,#dbeafe);border:1px solid #bfdbfe;position:relative;overflow:hidden;">
+  <div style="position:absolute;top:-30px;right:-30px;width:140px;height:140px;border-radius:50%;background:radial-gradient(circle,rgba(37,99,235,0.1),transparent 70%);"></div>
+  <div class="d-flex align-items-center gap-3">
+    <div style="width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--primary),var(--accent));display:flex;align-items:center;justify-content:center;font-size:1.4rem;color:#fff;box-shadow:0 6px 20px rgba(37,99,235,0.28);">
+      <i class="fa-solid fa-user-injured"></i>
+    </div>
+    <div>
+      <h5 class="mb-0" style="color:#0f172a;font-family:'Sora',sans-serif;font-weight:700;">Welcome back, {{ session.name }}!</h5>
+      <p class="mb-0" style="color:#475569;font-size:0.85rem;">Your health dashboard — appointments and scan results at a glance.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Stats -->
+<div class="row g-3 mb-4">
+  <div class="col-md-4 animate-in-1">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(37,99,235,0.1);"><i class="fa-solid fa-calendar-check" style="color:#2563eb;"></i></div>
+      <div class="stat-info">
+        <div class="stat-value">{{ total }}</div>
+        <div class="stat-label">Total Appointments</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4 animate-in-2">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(37,99,235,0.1);"><i class="fa-solid fa-microscope" style="color:var(--accent);"></i></div>
+      <div class="stat-info">
+        <div class="stat-value">{{ recent_scans|length }}</div>
+        <div class="stat-label">MRI Scans</div>
+      </div>
+    </div>
+  </div>
+  <div class="col-md-4 animate-in-3">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(34,197,94,0.1);"><i class="fa-solid fa-calendar-day" style="color:#22c55e;"></i></div>
+      <div class="stat-info">
+        <div class="stat-value">{{ upcoming|length }}</div>
+        <div class="stat-label">Upcoming</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <!-- Upcoming Appointments -->
+  <div class="col-lg-6 animate-in-2">
+    <div class="card h-100">
+      <div class="card-header-custom justify-content-between">
+        <span><i class="fa-solid fa-calendar-check" style="color:#2563eb;"></i> Upcoming Appointments</span>
+        <a href="/patient/appointments" class="btn btn-sm btn-outline-secondary" style="font-size:0.75rem;">View All</a>
+      </div>
+      <div>
+        {% if upcoming %}
+          {% for appt in upcoming %}
+          <div class="d-flex align-items-center gap-3 p-3" style="border-bottom:1px solid #f1f5f9;">
+            <div style="width:44px;height:44px;border-radius:12px;background:rgba(37,99,235,0.08);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+              <i class="fa-solid fa-stethoscope" style="color:#2563eb;"></i>
+            </div>
+            <div class="flex-grow-1">
+              <div class="fw-600" style="font-size:0.88rem;">Dr. {{ appt.doctor.name }}</div>
+              <div style="color:#64748b;font-size:0.78rem;">{{ appt.appt_date }} at {{ appt.time_slot }}</div>
+            </div>
+            <span class="priority-{{ appt.priority.lower() }}">{{ appt.priority }}</span>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="p-5 text-center" style="color:#94a3b8;">
+            <i class="fa-regular fa-calendar fa-2x mb-3 d-block" style="opacity:0.3;"></i>
+            No upcoming appointments
+          </div>
+        {% endif %}
+      </div>
+      <div class="p-3">
+        <a href="/patient/book" class="btn btn-primary w-100">
+          <i class="fa-solid fa-calendar-plus"></i> Book Appointment
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Scans -->
+  <div class="col-lg-6 animate-in-3">
+    <div class="card h-100">
+      <div class="card-header-custom justify-content-between">
+        <span><i class="fa-solid fa-microscope" style="color:var(--accent);"></i> Recent Scan Results</span>
+      </div>
+      <div>
+        {% if recent_scans %}
+          {% for scan in recent_scans %}
+          <div class="d-flex align-items-center gap-3 p-3" style="border-bottom:1px solid #f1f5f9;">
+            <div style="width:44px;height:44px;border-radius:12px;overflow:hidden;flex-shrink:0;border:1.5px solid #e8eef6;">
+              <img src="/static/uploads/{{ scan.image_path }}" style="width:100%;height:100%;object-fit:cover;" onerror="this.parentElement.innerHTML='<div style=\'display:flex;align-items:center;justify-content:center;height:100%;background:#f8fafc;\'>&#xf1e8;</div>'">
+            </div>
+            <div class="flex-grow-1">
+              <div class="fw-600" style="font-size:0.88rem;">{{ scan.prediction }}</div>
+              <div style="color:#64748b;font-size:0.78rem;">{{ "%.1f"|format(scan.confidence) }}% confidence · {{ scan.created_at.strftime('%d %b %Y') }}</div>
+            </div>
+            <a href="/patient/report/{{ scan.id }}" class="btn btn-sm btn-outline-primary">View</a>
+          </div>
+          {% endfor %}
+        {% else %}
+          <div class="p-5 text-center" style="color:#94a3b8;">
+            <i class="fa-regular fa-image fa-2x mb-3 d-block" style="opacity:0.3;"></i>
+            No scan results yet
+          </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,109 @@
+{% extends "base.html" %}
+{% block title %}Reschedule Appointment{% endblock %}
+{% block page_title %}Reschedule Appointment{% endblock %}
+{% block content %}
+<div class="row justify-content-center">
+  <div class="col-lg-8">
+
+    <!-- Current Appointment Banner -->
+    <div class="mb-4 p-4 rounded-3" style="background:#fffbeb;border:1px solid #fde68a;">
+      <div class="d-flex align-items-center gap-3">
+        <div style="width:44px;height:44px;border-radius:12px;background:rgba(245,158,11,0.15);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+          <i class="fa-solid fa-calendar-day" style="color:#f59e0b;"></i>
+        </div>
+        <div>
+          <div style="font-size:0.75rem;color:#92400e;font-weight:600;text-transform:uppercase;letter-spacing:0.5px;">Current Appointment</div>
+          <div class="fw-700" style="color:#1e293b;">Dr. {{ appt.doctor.name }} &bull; {{ appt.appt_date }} at {{ appt.time_slot }}</div>
+          <div style="color:#64748b;font-size:0.82rem;">{{ appt.reason or 'No reason specified' }}</div>
+        </div>
+      </div>
+    </div>
+
+    <form method="POST" id="reschedForm">
+      <div class="form-card mb-4">
+        <div class="d-flex align-items-center gap-3 mb-4">
+          <div style="width:38px;height:38px;border-radius:10px;background:rgba(245,158,11,0.12);display:flex;align-items:center;justify-content:center;">
+            <i class="fa-solid fa-calendar-pen" style="color:#f59e0b;"></i>
+          </div>
+          <div class="fw-700" style="font-size:0.95rem;">New Appointment Details</div>
+        </div>
+
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <label class="form-label">Doctor</label>
+            <select name="doctor_id" id="doctor_sel" class="form-select" onchange="loadSlots()">
+              {% for doc in doctors %}
+              <option value="{{ doc.id }}" {% if doc.id == appt.doctor_id %}selected{% endif %}>
+                {{ doc.name }}{% if doc.doctor_profile %} — {{ doc.doctor_profile.specialization }}{% endif %}
+              </option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">New Date</label>
+            <input type="date" id="appt_date" name="appt_date" class="form-control"
+                   value="{{ appt.appt_date }}" required onchange="loadSlots()">
+          </div>
+        </div>
+
+        <input type="hidden" name="time_slot" id="time_slot_input" required>
+        <div id="slot-blocked" class="tip-box warning mb-3 d-none"><i class="fa-solid fa-ban"></i><span></span></div>
+        <div id="slot-msg" style="font-size:0.82rem;color:#94a3b8;margin-bottom:10px;">Loading slots...</div>
+        <div id="slots-grid" class="avail-grid"></div>
+      </div>
+
+      <div class="d-flex gap-3">
+        <button type="submit" class="btn btn-primary btn-lg">
+          <i class="fa-solid fa-calendar-day"></i> Confirm Reschedule
+        </button>
+        <a href="/patient/appointments" class="btn btn-outline-secondary btn-lg">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+document.getElementById('appt_date').min = new Date().toISOString().split('T')[0];
+
+function loadSlots() {
+  const docId = document.getElementById('doctor_sel').value;
+  const date  = document.getElementById('appt_date').value;
+  if (!docId || !date) return;
+  document.getElementById('slot-msg').textContent = 'Loading slots...';
+  document.getElementById('slots-grid').innerHTML = '';
+  document.getElementById('time_slot_input').value = '';
+  document.getElementById('slot-blocked').classList.add('d-none');
+
+  fetch(`/api/available-slots?doctor_id=${docId}&date=${date}`)
+    .then(r => r.json())
+    .then(data => {
+      if (data.blocked_day) {
+        const box = document.getElementById('slot-blocked');
+        box.querySelector('span').textContent = `Doctor unavailable: ${data.reason}`;
+        box.classList.remove('d-none');
+        document.getElementById('slot-msg').textContent = '';
+        return;
+      }
+      if (!data.slots.length) {
+        document.getElementById('slot-msg').textContent = 'No slots available on this date.';
+        return;
+      }
+      document.getElementById('slot-msg').textContent = `${data.slots.length} slot(s) available`;
+      const grid = document.getElementById('slots-grid');
+      data.slots.forEach(slot => {
+        const btn = document.createElement('div');
+        btn.className = 'slot-btn available';
+        btn.textContent = slot;
+        btn.onclick = () => {
+          document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+          document.getElementById('time_slot_input').value = slot;
+        };
+        grid.appendChild(btn);
+      });
+    });
+}
+window.onload = loadSlots;
+</script>
+{% endblock %}

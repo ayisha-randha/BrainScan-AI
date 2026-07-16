@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Manage Users{% endblock %}
+{% block page_title %}Manage Users{% endblock %}
+{% block content %}
+
+<div class="page-header">
+  <div>
+    <div class="page-header-title">Users</div>
+    <div class="page-header-sub">Manage accounts and access</div>
+  </div>
+</div>
+
+<div class="card">
+  <div class="table-responsive">
+    <table class="table mb-0">
+      <thead>
+        <tr><th>#</th><th>User</th><th>Email</th><th>Phone</th><th>Role</th><th>Joined</th><th>Status</th><th>Action</th></tr>
+      </thead>
+      <tbody>
+        {% for user in users.items %}
+        <tr>
+          <td style="color:#94a3b8;font-size:0.8rem;">#{{ user.id }}</td>
+          <td>
+            <div class="d-flex align-items-center gap-2">
+              <div style="width:32px;height:32px;border-radius:8px;background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;display:flex;align-items:center;justify-content:center;font-family:'Sora',sans-serif;font-weight:700;font-size:0.82rem;flex-shrink:0;">{{ user.name[0].upper() }}</div>
+              <span class="fw-600">{{ user.name }}</span>
+            </div>
+          </td>
+          <td style="color:#64748b;font-size:0.83rem;">{{ user.email }}</td>
+          <td style="color:#94a3b8;font-size:0.83rem;">{{ user.phone or '—' }}</td>
+          <td><span class="badge-role badge-{{ user.role }}">{{ user.role|capitalize }}</span></td>
+          <td style="color:#94a3b8;font-size:0.82rem;">{{ user.created_at.strftime('%d %b %Y') }}</td>
+          <td>
+            {% if user.is_active %}
+              <span class="status-badge status-confirmed">Active</span>
+            {% else %}
+              <span class="status-badge status-cancelled">Inactive</span>
+            {% endif %}
+          </td>
+          <td>
+            {% if user.role != 'admin' %}
+            <a href="/admin/users/toggle/{{ user.id }}"
+               onclick="return confirm('{{ 'Deactivate' if user.is_active else 'Activate' }} {{ user.name }}?')"
+               class="btn btn-sm {{ 'btn-outline-danger' if user.is_active else 'btn-success' }}">
+              {% if user.is_active %}<i class="fa-solid fa-ban"></i> Deactivate
+              {% else %}<i class="fa-solid fa-circle-check"></i> Activate{% endif %}
+            </a>
+            {% else %}
+            <span style="color:#94a3b8;font-size:0.8rem;">—</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% else %}
+        <tr><td colspan="8">
+          <div class="empty-state">
+            <i class="fa-solid fa-users"></i>
+            <h6>No Users Found</h6>
+            <p>Registered users will appear here.</p>
+          </div>
+        </td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% if users.pages > 1 %}
+<div class="pagination-wrapper">
+  <nav><ul class="pagination">
+    <li class="page-item {% if not users.has_prev %}disabled{% endif %}"><a class="page-link" href="?page={{ users.prev_num }}"><i class="fa-solid fa-chevron-left"></i></a></li>
+    {% for p in users.iter_pages() %}
+      {% if p %}<li class="page-item {% if p==users.page %}active{% endif %}"><a class="page-link" href="?page={{ p }}">{{ p }}</a></li>
+      {% else %}<li class="page-item disabled"><span class="page-link">…</span></li>{% endif %}
+    {% endfor %}
+    <li class="page-item {% if not users.has_next %}disabled{% endif %}"><a class="page-link" href="?page={{ users.next_num }}"><i class="fa-solid fa-chevron-right"></i></a></li>
+  </ul></nav>
+</div>
+{% endif %}
+{% endblock %}

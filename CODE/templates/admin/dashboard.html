@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block page_title %}System Overview{% endblock %}
+{% block scripts %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}
+{% block content %}
+
+<!-- Stats -->
+<div class="row g-3 mb-4">
+  <div class="col-md-3 animate-in">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(37,99,235,0.1);"><i class="fa-solid fa-user-injured" style="color:#2563eb;"></i></div>
+      <div class="stat-info"><div class="stat-value">{{ total_patients }}</div><div class="stat-label">Total Patients</div></div>
+    </div>
+  </div>
+  <div class="col-md-3 animate-in-1">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(37,99,235,0.1);"><i class="fa-solid fa-user-doctor" style="color:var(--accent);"></i></div>
+      <div class="stat-info"><div class="stat-value">{{ total_doctors }}</div><div class="stat-label">Doctors</div></div>
+    </div>
+  </div>
+  <div class="col-md-3 animate-in-2">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(99,102,241,0.1);"><i class="fa-solid fa-calendar" style="color:#6366f1;"></i></div>
+      <div class="stat-info"><div class="stat-value">{{ total_appts }}</div><div class="stat-label">Appointments</div></div>
+    </div>
+  </div>
+  <div class="col-md-3 animate-in-3">
+    <div class="stat-card">
+      <div class="stat-icon" style="background:rgba(245,158,11,0.1);"><i class="fa-solid fa-microscope" style="color:#f59e0b;"></i></div>
+      <div class="stat-info"><div class="stat-value">{{ total_scans }}</div><div class="stat-label">Total Scans</div></div>
+    </div>
+  </div>
+</div>
+
+{% if low_conf > 0 %}
+<div class="alert alert-warning mb-4 animate-in-1">
+  <i class="fa-solid fa-triangle-exclamation me-2"></i>
+  <strong>{{ low_conf }} low-confidence scan{{ 's' if low_conf > 1 else '' }}</strong> are awaiting doctor review.
+  <a href="/admin/scans" class="ms-2 fw-600" style="color:#92400e;">View scans →</a>
+</div>
+{% endif %}
+
+<div class="row g-4">
+  <!-- Tumor Distribution -->
+  <div class="col-lg-5 animate-in-2">
+    <div class="card">
+      <div class="card-header-custom"><i class="fa-solid fa-chart-pie" style="color:#2563eb;"></i> AI Prediction Distribution</div>
+      <div class="p-4">
+        <div style="height:220px;display:flex;align-items:center;justify-content:center;">
+          <canvas id="tumorChart" style="max-height:200px;"></canvas>
+        </div>
+        <div class="row g-2 mt-2">
+          {% set colors = ['#f43f5e','#f59e0b','#38bdf8','#22c55e'] %}
+          {% for cls, cnt in class_counts.items() %}
+          <div class="col-6">
+            <div class="d-flex align-items-center gap-2">
+              <div style="width:10px;height:10px;border-radius:3px;background:{{ colors[loop.index0] }};flex-shrink:0;"></div>
+              <span style="font-size:0.8rem;color:#64748b;">{{ cls }}</span>
+              <span class="ms-auto fw-600" style="font-size:0.8rem;">{{ cnt }}</span>
+            </div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Weekly Chart -->
+  <div class="col-lg-7 animate-in-3">
+    <div class="card">
+      <div class="card-header-custom"><i class="fa-solid fa-chart-bar" style="color:#6366f1;"></i> Weekly Appointments</div>
+      <div class="p-4"><div class="chart-container"><canvas id="weeklyChart"></canvas></div></div>
+    </div>
+  </div>
+
+  <!-- Recent Appointments -->
+  <div class="col-12 animate-in-4">
+    <div class="card">
+      <div class="card-header-custom justify-content-between">
+        <span><i class="fa-solid fa-calendar" style="color:#6366f1;"></i> Recent Appointments</span>
+        <a href="/admin/appointments" class="btn btn-sm btn-outline-secondary" style="font-size:0.75rem;">View All</a>
+      </div>
+      <div class="table-responsive">
+        <table class="table mb-0">
+          <thead><tr><th>#</th><th>Patient</th><th>Doctor</th><th>Date</th><th>Time</th><th>Status</th></tr></thead>
+          <tbody>
+            {% for appt in recent_appts %}
+            <tr>
+              <td class="text-muted" style="font-size:0.8rem;">#{{ appt.id }}</td>
+              <td class="fw-600">{{ appt.patient.name }}</td>
+              <td style="color:#64748b;">Dr. {{ appt.doctor.name }}</td>
+              <td>{{ appt.appt_date }}</td>
+              <td style="color:#64748b;">{{ appt.time_slot }}</td>
+              <td><span class="status-badge status-{{ appt.status }}">{{ appt.status|capitalize }}</span></td>
+            </tr>
+            {% else %}
+            <tr><td colspan="6" class="text-center py-4" style="color:#94a3b8;">No appointments yet</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const classData = {{ class_counts|tojson }};
+const labels = Object.keys(classData);
+const values = Object.values(classData);
+new Chart(document.getElementById('tumorChart'), {
+  type: 'doughnut',
+  data: {
+    labels: labels,
+    datasets: [{ data: values, backgroundColor: ['#f43f5e','#f59e0b','#38bdf8','#22c55e'], borderWidth: 0, hoverOffset: 8 }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false, cutout: '68%',
+    plugins: { legend: { display: false } }
+  }
+});
+
+const weekly = {{ weekly|safe }};
+new Chart(document.getElementById('weeklyChart'), {
+  type: 'line',
+  data: {
+    labels: weekly.map(d => d.day),
+    datasets: [{
+      label: 'Appointments',
+      data: weekly.map(d => d.count),
+      borderColor: '#6366f1', backgroundColor: 'rgba(99,102,241,0.08)',
+      borderWidth: 2, pointBackgroundColor: '#6366f1', pointRadius: 4,
+      tension: 0.4, fill: true,
+    }]
+  },
+  options: {
+    responsive: true, maintainAspectRatio: false,
+    plugins: { legend: { display: false } },
+    scales: {
+      y: { beginAtZero: true, ticks: { stepSize: 1, color: '#94a3b8', font: { size: 11 } }, grid: { color: '#f1f5f9' } },
+      x: { ticks: { color: '#94a3b8', font: { size: 11 } }, grid: { display: false } }
+    }
+  }
+});
+</script>
+{% endblock %}

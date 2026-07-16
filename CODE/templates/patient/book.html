@@ -1,0 +1,171 @@
+{% extends "base.html" %}
+{% block title %}Book Appointment{% endblock %}
+{% block page_title %}Book Appointment{% endblock %}
+{% block content %}
+
+<div class="row justify-content-center">
+  <div class="col-lg-9">
+    <form method="POST" id="bookForm">
+
+      <!-- Step 1: Doctor -->
+      <div class="form-card mb-4">
+        <div class="d-flex align-items-center gap-3 mb-4">
+          <div class="step-badge">1</div>
+          <div>
+            <div class="fw-700" style="font-size:0.95rem;">Choose a Doctor</div>
+            <div style="font-size:0.8rem;color:#64748b;">Select from available specialists</div>
+          </div>
+        </div>
+        {% if doctors %}
+        <div class="row g-3">
+          {% for doc in doctors %}
+          <div class="col-md-4">
+            <label style="width:100%;cursor:pointer;">
+              <input type="radio" name="doctor_id" value="{{ doc.id }}" required
+                     style="display:none;" onchange="selectDoctor('{{ doc.id }}')">
+              <div class="doctor-card text-center" id="doc-{{ doc.id }}">
+                <div class="doctor-avatar mx-auto"><i class="fa-solid fa-user-doctor"></i></div>
+                <div class="fw-700" style="font-size:0.9rem;">{{ doc.name }}</div>
+                {% if doc.doctor_profile %}
+                <div style="color:#64748b;font-size:0.78rem;">{{ doc.doctor_profile.specialization }}</div>
+                <div style="color:#94a3b8;font-size:0.75rem;">{{ doc.doctor_profile.experience }} yrs exp</div>
+                {% endif %}
+                {% if doc.avg_rating %}
+                <div class="stars-display mt-1">
+                  {% for i in range(1,6) %}<i class="fa-solid fa-star {% if i > doc.avg_rating|round(0,'ceil')|int %}empty{% endif %}"></i>{% endfor %}
+                  <span style="color:#64748b;font-size:0.75rem;margin-left:3px;">{{ doc.avg_rating }} ({{ doc.rating_count }})</span>
+                </div>
+                {% else %}
+                <div style="color:#94a3b8;font-size:0.75rem;margin-top:4px;">No ratings yet</div>
+                {% endif %}
+              </div>
+            </label>
+          </div>
+          {% endfor %}
+        </div>
+        {% else %}
+        <div class="empty-state"><i class="fa-solid fa-user-doctor"></i><h6>No Doctors Available</h6><p>Please contact the administrator.</p></div>
+        {% endif %}
+      </div>
+
+      <!-- Step 2: Date & Slots -->
+      <div class="form-card mb-4">
+        <div class="d-flex align-items-center gap-3 mb-4">
+          <div class="step-badge">2</div>
+          <div>
+            <div class="fw-700" style="font-size:0.95rem;">Select Date &amp; Time</div>
+            <div style="font-size:0.8rem;color:#64748b;">Choose your preferred appointment slot</div>
+          </div>
+        </div>
+        <div class="row g-3 mb-4">
+          <div class="col-md-5">
+            <label class="form-label">Appointment Date</label>
+            <input type="date" id="appt_date" name="appt_date" class="form-control" required onchange="loadSlots()">
+          </div>
+          <div class="col-md-4">
+            <label class="form-label">Priority</label>
+            <select name="priority" class="form-select">
+              <option value="Normal">Normal</option>
+              <option value="Urgent">Urgent</option>
+              <option value="Routine">Routine</option>
+            </select>
+          </div>
+        </div>
+        <input type="hidden" name="time_slot" id="time_slot_input" required>
+        <div id="slot-blocked" class="tip-box warning mb-3 d-none"><i class="fa-solid fa-ban"></i><span></span></div>
+        <div id="slot-msg" style="font-size:0.82rem;color:#94a3b8;margin-bottom:10px;">Select a doctor and date to see available slots.</div>
+        <div id="slots-grid" class="avail-grid"></div>
+      </div>
+
+      <!-- Step 3: Reason -->
+      <div class="form-card mb-4">
+        <div class="d-flex align-items-center gap-3 mb-4">
+          <div class="step-badge">3</div>
+          <div>
+            <div class="fw-700" style="font-size:0.95rem;">Reason for Visit</div>
+            <div style="font-size:0.8rem;color:#64748b;">Describe your symptoms or purpose</div>
+          </div>
+        </div>
+        <div class="mb-3">
+          <label class="form-label">Quick Template</label>
+          <select class="form-select" onchange="fillReason(this)">
+            <option value="">— Choose a template or type below —</option>
+            <option value="First consultation for MRI review">First consultation for MRI review</option>
+            <option value="Follow-up appointment after treatment">Follow-up appointment after treatment</option>
+            <option value="Second opinion on existing diagnosis">Second opinion on existing diagnosis</option>
+            <option value="Routine brain MRI scan">Routine brain MRI scan</option>
+            <option value="Headache and visual disturbances">Headache and visual disturbances</option>
+            <option value="Post-surgery follow-up">Post-surgery follow-up</option>
+          </select>
+        </div>
+        <textarea name="reason" id="reason_text" class="form-control" rows="3"
+                  placeholder="Describe your symptoms or reason for this appointment..."></textarea>
+      </div>
+
+      <div class="d-flex gap-3">
+        <button type="submit" class="btn btn-primary btn-lg">
+          <i class="fa-solid fa-calendar-check"></i> Confirm Booking
+        </button>
+        <a href="/patient/dashboard" class="btn btn-outline-secondary btn-lg">Cancel</a>
+      </div>
+    </form>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+document.getElementById('appt_date').min = new Date().toISOString().split('T')[0];
+let selectedDoctorId = null;
+
+function selectDoctor(id) {
+  selectedDoctorId = id;
+  document.querySelectorAll('[id^="doc-"]').forEach(el => {
+    el.classList.remove('selected');
+  });
+  document.getElementById('doc-' + id).classList.add('selected');
+  loadSlots();
+}
+
+function fillReason(sel) {
+  if (sel.value) document.getElementById('reason_text').value = sel.value;
+}
+
+function loadSlots() {
+  const date = document.getElementById('appt_date').value;
+  if (!selectedDoctorId || !date) return;
+  document.getElementById('slot-msg').textContent = 'Loading available slots...';
+  document.getElementById('slots-grid').innerHTML = '';
+  document.getElementById('time_slot_input').value = '';
+  document.getElementById('slot-blocked').classList.add('d-none');
+
+  fetch(`/api/available-slots?doctor_id=${selectedDoctorId}&date=${date}`)
+    .then(r => r.json())
+    .then(data => {
+      if (data.blocked_day) {
+        const box = document.getElementById('slot-blocked');
+        box.querySelector('span').textContent = `Doctor is unavailable: ${data.reason}`;
+        box.classList.remove('d-none');
+        document.getElementById('slot-msg').textContent = '';
+        return;
+      }
+      if (!data.slots.length) {
+        document.getElementById('slot-msg').textContent = 'No slots available on this date.';
+        return;
+      }
+      document.getElementById('slot-msg').textContent = `${data.slots.length} slot(s) available — click to select`;
+      const grid = document.getElementById('slots-grid');
+      data.slots.forEach(slot => {
+        const btn = document.createElement('div');
+        btn.className = 'slot-btn available';
+        btn.textContent = slot;
+        btn.onclick = () => {
+          document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
+          btn.classList.add('selected');
+          document.getElementById('time_slot_input').value = slot;
+        };
+        grid.appendChild(btn);
+      });
+    });
+}
+</script>
+{% endblock %}
